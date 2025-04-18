@@ -20,8 +20,8 @@ router.get("/lists", cacheMiddleware('user'), UserController.getUserLists);
 router.get("/registrationForm", cacheMiddleware('registration'), UserController.getRegistrationForm);
 
 // User registration and retrieval
-router.get('/:id', cacheMiddleware('user'), UserController.getUserById);
-router.get('/phone/:phone', cacheMiddleware('user'), UserController.getUserByPhone);
+router.get('/:id', UserController.getUserById);
+router.get('/phone/:phone', UserController.getUserByPhone);
 
 // Premium plan management
 router.patch('/:id/premium', UserController.updatePremiumPlan);
