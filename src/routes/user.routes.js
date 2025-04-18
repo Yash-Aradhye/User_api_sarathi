@@ -17,7 +17,7 @@ router.post('/logout', UserController.logout);
 
 // Cached routes
 router.get("/lists", cacheMiddleware('user'), UserController.getUserLists);
-router.get("/registrationForm", cacheMiddleware('registration'), UserController.getRegistrationForm);
+router.get("/registrationForm", UserController.getRegistrationForm);
 
 // User registration and retrieval
 router.get('/:id', UserController.getUserById);
@@ -30,13 +30,13 @@ router.get('/:id/premium-status', UserController.checkPremiumStatus);
 
 //formsteps
 router.post('/formsteps', UserController.createFormSteps);
-router.get('/formsteps', cacheMiddleware('formsteps'), UserController.getFormSteps);
-router.get('/formsteps/:id', cacheMiddleware('formsteps'), UserController.getFormStepsById);
+router.get('/formsteps',  UserController.getFormSteps);
+router.get('/formsteps/:id',  UserController.getFormStepsById);
 router.patch('/formsteps/:id', UserController.updateFormSteps);
 router.delete('/formsteps/:id', UserController.deleteFormSteps);
 
 // User-specific form data
-router.get('/formdata/:phone/:formId', cacheMiddleware('formdata'), UserController.getUserFormData);
+router.get('/formdata/:phone/:formId', UserController.getUserFormData);
 router.post('/formdata/:phone/:formId', UserController.updateUserFormData);
 
 export default router;
