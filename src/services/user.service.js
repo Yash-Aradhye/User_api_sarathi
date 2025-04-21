@@ -340,10 +340,18 @@ class UserService {
       // Merge generic form with user data
       const mergedSteps = genericForm.steps.map(genericStep => {
         const userStep = userData.steps.find(s => s.number === genericStep.number);
+        console.log( {
+          ...genericStep,
+          data: userStep?.data || null,
+          status: userStep?.status || genericStep.status || null,
+          ...userStep
+        });
+        
         return {
           ...genericStep,
           data: userStep?.data || null,
-          status: userStep?.status || genericStep.status || null
+          status: userStep?.status || genericStep.status || null,
+          ...userStep
         };
       });
 
@@ -387,8 +395,9 @@ class UserService {
         if (!updatedStep) return currentStep;
 
         return {
-          number: currentStep.number,
-          title: currentStep.title, // Keep original title
+          ...currentStep,
+          ...updatedStep,
+          number: currentStep.number, 
           status: updatedStep.status || null,
           remark: updatedStep.remark || null // Add remark field
         };
@@ -401,6 +410,9 @@ class UserService {
           steps: mergedSteps
         }
       };
+
+      console.dir(updatedSteps, {depth: null});
+      
 
       await this.collection.doc(user.id).update(updateData);
       return { id: formId, steps: mergedSteps };
