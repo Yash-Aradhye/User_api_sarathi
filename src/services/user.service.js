@@ -403,20 +403,35 @@ class UserService {
         };
       });
 
+      const mergedSteps2 = genericForm.steps.map(step => {
+        const currentStep = currentUserData.steps.find(s => s.number === step.number);
+        if(!currentStep) return step;
+        const updatedStep = processedSteps.find(s => s.number === currentStep.number);
+        if (!updatedStep) return currentStep;
+
+        return {
+          ...currentStep,
+          ...updatedStep,
+          status: updatedStep.status || null,
+          remark: updatedStep.remark || null // Add remark field
+        };
+      });
+
       // Update user's stepsData with clean data
       const updateData = {
         stepsData: {
           id: formId,
-          steps: mergedSteps
+          steps: mergedSteps2
         }
       };
 
-      console.dir(updatedSteps, {depth: null});
+      console.dir(mergedSteps2, {depth: null});
       
 
       await this.collection.doc(user.id).update(updateData);
       return { id: formId, steps: mergedSteps };
     } catch (error) {
+      console.log(error);
       throw new Error(`Error updating user form data: ${error.message}`);
     }
   }
