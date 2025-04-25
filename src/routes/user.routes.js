@@ -6,9 +6,11 @@ import cacheMiddleware from '../middleware/cacheMiddleware.js';
 const router = express.Router();
 
 // Public routes
-router.post('/send-otp', UserController.sendOTP);
+router.post('/sendotp', UserController.sendOTP);
 router.post('/login', UserController.login);
 router.post('/ispremium', UserController.checkPremiumStatusByPhone);
+router.post('/updateName', UserController.updateName);
+router.post('/verifyPhone', UserController.verifyPhone);
 router.post('/', UserController.createUser);
 
 // Protected routes (require authentication)
@@ -18,6 +20,7 @@ router.post('/logout', UserController.logout);
 // Cached routes
 router.get("/lists", cacheMiddleware('user'), UserController.getUserLists);
 router.get("/registrationForm", UserController.getRegistrationForm);
+router.get("/landing",cacheMiddleware('landingpage'), UserController.getLandingPageData);
 
 // User registration and retrieval
 router.get('/:id', UserController.getUserById);

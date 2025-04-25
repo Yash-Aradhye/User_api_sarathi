@@ -1,12 +1,15 @@
 import { db } from '../../config/firebase.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import redis from '../config/redisClient.js';
+import otpClient from '../utils/otpClient.js';
 
 class UserService {
   constructor() {
     this.collection = db.collection('users');
     this.formCollection = db.collection('counsellingForms');
     this.registrationForm = db.collection('registrationForm');
+    this.landingPage = db.collection('landingPage');
   }
   async createUser(userData) {
     try {
@@ -70,7 +73,24 @@ class UserService {
         .get();
         
       if (snapshot.empty) {
-        throw new Error('User not found');
+        //create a new user
+        const user = {
+          name: phone,
+          phone: phone,
+          isPremium: false,
+          createdAt: new Date(),
+          premiumPlan: null,
+          hasLoggedIn: true,
+        };
+        const otp = await otpClient.sendOtp(phone);
+        console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
+        
+        const docRef = await this.collection.add({
+          ...user,
+          otp: otp,
+          otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes expiry
+        });
+        return { id: docRef.id, ...user, firstLogin: true };
       }
       
       const doc = snapshot.docs[0];
@@ -199,18 +219,36 @@ class UserService {
   }
   async checkPremiumStatusByPhone(phone) {
     try {
-      const user = await this.getUserByPhone(phone);
-      if (!user.premiumPlan) return {
+      const user = await this.collection.where('phone', '==', phone).get();
+      
+      if (user.empty) {
+        return {
+          isPremium: false
+        }
+      }
+      const doc = user.docs[0];
+      const data = {id: doc.id, ...doc.data()};
+
+      if (!data) {
+        return {
+          isPremium: false
+        }
+      }
+
+      if (!data.premiumPlan) return {
         isPremium: false
       };
 
+      console.log(data.premiumPlan);
+      
+
       const now = new Date();
-      const expiryDate = user.premiumPlan.expiryDate.toDate();
+      const expiryDate = data.premiumPlan.expiryDate.toDate();
 
       
 
       if (expiryDate < now) {
-        await this.collection.doc(user.id).update({
+        await this.collection.doc(data.id).update({
           isPremium: false
         });
         return {
@@ -463,6 +501,100 @@ class UserService {
       throw new Error(`Error getting registration form: ${error.message}`);
     }
   }
+
+  async getLandingPageData() {
+    try {      
+      const formDoc = await this.landingPage.doc('landingPage').get();
+      const formData = formDoc.data();
+      if (!formData) throw new Error('Form not found');
+      return formData?? {}
+    } catch (error) {
+      throw new Error(`Error getting landing page data: ${error.message}`);
+    }
+  }
+
+  async updateName(phone, name, email) {
+    try {
+      const docRef = await this.collection.where("phone","==",phone).get();
+      if (docRef.empty) {
+        throw new Error('User not found');
+      }
+      const doc = docRef.docs[0];
+      const userData = doc.data();
+      if (!name) {
+        throw new Error('Name is required');
+      }
+      await this.collection.doc(doc.id).update({
+        name: name,
+        email: email,
+        hasLoggedIn: true,
+        firstLogin: false
+      });
+      await this.invalidateCache(`user:${doc.id}`);
+      const token = jwt.sign({ id: doc.id, phone }, process.env.USER_JWT);
+      return { id: doc.id, ...userData,name, token };
+    } catch (error) {
+      throw new Error(`Error updating user name: ${error.message}`);
+    }
+  }
+
+  async invalidateCache(pattern) {
+    const keys = await redis.keys(pattern);
+    if (keys.length > 0) {
+        await redis.del(keys);
+    }
+}
+
+  async verifyPhone(phone, otp) {
+    try {
+      const docRef = await this.collection.where("phone","==",phone).get();
+      if (docRef.empty) {
+        throw new Error('User not found');
+      }
+      const doc = docRef.docs[0];
+      const userData = doc.data();
+      if (!otp) {
+        throw new Error('OTP is required');
+      }
+      if (userData.otp !== otp) {
+        throw new Error('Invalid OTP');
+      }
+      await this.collection.doc(doc.id).update({
+        hasLoggedIn: true,
+        otp: null,
+        otpExpiry: null,
+        firstLogin: false,
+        phoneVerified:true
+      });
+      await this.invalidateCache(`user:${doc.id}`);
+      return { id: doc.id, ...userData, phoneVerified:true, verified:true };
+    } catch (error) {
+      throw new Error(`Error verifying phone: ${error.message}`);
+    }
+  }
+
+  async sendOtp(phone){
+    try {
+      const docRef = await this.collection.where("phone","==",phone).get();
+      if (docRef.empty) {
+        throw new Error('User not found');
+      }
+      const doc = docRef.docs[0];
+      const userData = doc.data();
+      if (!userData) {
+        throw new Error('User not found');
+      }
+      const otp = await otpClient.sendOtp(phone);
+      console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
+      await this.collection.doc(doc.id).update({
+        otp: otp,
+        otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes expiry
+      });
+    } catch (error) {
+      throw new Error(`Error sending OTP: ${error.message}`);
+    }
+  }
+  
 
 }
 

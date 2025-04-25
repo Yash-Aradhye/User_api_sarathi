@@ -1,0 +1,64 @@
+{
+  "entity": "event",
+  "account_id": "acc_QMXWedJSZ3vAnr",
+  "event": "payment.captured",
+  "contains": [
+    "payment"
+  ],
+  "payload": {
+    "payment": {
+      "entity": {
+        "id": "pay_QMamk0ScDRVC9c",
+        "entity": "payment",
+        "amount": 100,
+        "currency": "INR",
+        "status": "captured",
+        "order_id": "order_QMam95udRSqvfY",
+        "invoice_id": null,
+        "international": false,
+        "method": "card",
+        "amount_refunded": 0,
+        "refund_status": null,
+        "captured": true,
+        "description": "Credits towards consultation",
+        "card_id": "card_QMamkDdikzFsLz",
+        "card": {
+          "id": "card_QMamkDdikzFsLz",
+          "entity": "card",
+          "name": "",
+          "last4": "1111",
+          "network": "Visa",
+          "type": "prepaid",
+          "issuer": null,
+          "international": false,
+          "emi": false,
+          "sub_type": "consumer",
+          "token_iin": null
+        },
+        "bank": null,
+        "wallet": null,
+        "vpa": null,
+        "email": "mayankmchandratre@gmail.com",
+        "contact": "+917843065180",
+        "notes": {
+          "notes_key_1": "Tea, Earl Grey, Hot",
+          "notes_key_2": "Tea, Earl Grey… decaf."
+        },
+        "fee": 2,
+        "tax": 0,
+        "error_code": null,
+        "error_description": null,
+        "error_source": null,
+        "error_step": null,
+        "error_reason": null,
+        "acquirer_data": {
+          "auth_code": "759819"
+        },
+        "created_at": 1745431680,
+        "reward": null,
+        "base_amount": 100
+      }
+    }
+  },
+  "created_at": 1745431688
+}

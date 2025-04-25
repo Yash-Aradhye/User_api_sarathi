@@ -96,12 +96,9 @@ class UserController {
         return res.status(400).json({ error: 'Phone number is required' });
       }
       
-      const requiresOTP = await UserService.sendOTPForPremiumLogin(phone);
-      res.status(200).json({ 
-        otpSent: requiresOTP,
-        message: requiresOTP ? 
-          'OTP sent successfully' : 
-          'Regular login - No OTP required'
+      await UserService.sendOtp(phone);
+      res.status(200).json({
+        success: true
       });
     } catch (error) {
       res.status(400).json({ error: error.message });
@@ -243,6 +240,41 @@ class UserController {
       
       const form = await UserService.getRegistrationForm(id);
       res.status(200).json(form);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+  async getLandingPageData(req, res) {
+    try {      
+      const data = await UserService.getLandingPageData();
+      res.status(200).json(data);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+  async updateName(req, res) {
+    try {
+      const { name, phone, email } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: 'Name is required' });
+      }
+      
+      const user = await UserService.updateName(phone, name, email);
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async verifyPhone(req, res) {
+    try {
+      const { phone, otp } = req.body;
+      if (!phone || !otp) {
+        return res.status(400).json({ error: 'Phone number and OTP are required' });
+      }
+      
+      const user = await UserService.verifyPhone(phone, otp);
+      res.status(200).json(user);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
