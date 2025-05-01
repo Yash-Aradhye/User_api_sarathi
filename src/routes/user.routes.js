@@ -12,15 +12,21 @@ router.post('/ispremium', UserController.checkPremiumStatusByPhone);
 router.post('/updateName', UserController.updateName);
 router.post('/verifyPhone', UserController.verifyPhone);
 router.post('/', UserController.createUser);
-
+router.post('/saveOneSignalId', UserController.saveOneSignalId);
+router.get('/get-premium-plans',cacheMiddleware('homepage'), UserController.getPremiumPlans);
+router.get("/landing",cacheMiddleware('landingpage'), UserController.getLandingPageData);
+router.get("/gethomepage",cacheMiddleware('homepage'), UserController.getHomePageData);
 // Protected routes (require authentication)
+router.post('/sendpushnotification/:playedId', UserController.sendPushNotification);
 router.use(authMiddleware);
 router.post('/logout', UserController.logout);
 
 // Cached routes
 router.get("/lists", cacheMiddleware('user'), UserController.getUserLists);
 router.get("/registrationForm", UserController.getRegistrationForm);
-router.get("/landing",cacheMiddleware('landingpage'), UserController.getLandingPageData);
+
+
+
 
 // User registration and retrieval
 router.get('/:id', UserController.getUserById);
@@ -41,5 +47,8 @@ router.delete('/formsteps/:id', UserController.deleteFormSteps);
 // User-specific form data
 router.get('/formdata/:phone/:formId', UserController.getUserFormData);
 router.post('/formdata/:phone/:formId', UserController.updateUserFormData);
+
+
+
 
 export default router;

@@ -279,6 +279,53 @@ class UserController {
       res.status(400).json({ error: error.message });
     }
   }
+
+  async sendPushNotification(req, res){
+    try {
+      const { playedId } = req.params;
+      const { phone, title, body } = req.body;
+      if (!phone || !title || !body) {
+        return res.status(400).json({ error: 'Phone number, title and body are required' });
+      }
+      
+      const user = await UserService.sendPushNotification(phone,playedId, title, body);
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+  async saveOneSignalId(req, res) {
+    try {
+      const { phone, oneSignalId } = req.body;
+      if (!phone || !oneSignalId) {
+        return res.status(400).json({ error: 'Phone number and OneSignal ID are required' });
+      }
+      
+      const user = await UserService.saveOneSignalId(phone, oneSignalId);
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getHomePageData(req, res) {
+    try {      
+      const data = await UserService.getHomePageData();
+      res.status(200).json(data);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getPremiumPlans(req, res) {
+    try {      
+      const data = await UserService.getPremiumPlans();
+      res.status(200).json(data);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
 }
 
 export default new UserController();

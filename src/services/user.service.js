@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import redis from '../config/redisClient.js';
 import otpClient from '../utils/otpClient.js';
+import axios from 'axios';
 
 class UserService {
   constructor() {
@@ -11,6 +12,53 @@ class UserService {
     this.registrationForm = db.collection('registrationForm');
     this.landingPage = db.collection('landingPage');
   }
+
+  async sendOneSignalNotification(playerId, title, message, additionalData = {}) {
+    try {
+      const response = await axios.post(
+        'https://onesignal.com/api/v1/notifications',
+        {
+          app_id: process.env.ONESIGNAL_APP_ID, // Store this in your .env file
+          include_player_ids: [playerId],
+          headings: { en: title },
+          contents: { en: message },
+          data: additionalData
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}` // Store this in your .env file
+          }
+        }
+      );
+
+      console.log(response.data);
+      
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error sending OneSignal notification:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+  
+
+  async sendPushNotification(phone, playerId, title, body) {
+    try {
+      
+      const notification = {
+        title: title,
+        body: body,
+        phone: phone,
+        createdAt: new Date()
+      };
+      this.sendOneSignalNotification(playerId, title, body, notification);
+      return {notification };
+    } catch (error) {
+      throw new Error(`Error sending push notification: ${error.message}`);
+    }
+  }
+
   async createUser(userData) {
     try {
       const user = {
@@ -100,6 +148,17 @@ class UserService {
         if (!password) {
           throw new Error('Password required for premium users');
         }
+        
+        /* 
+          This is the code to check if the user is already logged in on another device
+          and if so, it will throw an error.
+          This is to prevent multiple logins from different devices in production.
+          In development, we can comment this out to allow multiple logins for testing purposes.
+        */
+
+        // if (userData.hasLoggedIn) {
+        //   throw new Error('User already logged in on another device');
+        // }
         const passMatch = await bcrypt.compare(password, userData.password);
         if(!passMatch) {
           throw new Error('Invalid password');
@@ -592,6 +651,44 @@ class UserService {
       });
     } catch (error) {
       throw new Error(`Error sending OTP: ${error.message}`);
+    }
+  }
+
+  async saveOneSignalId(phone, playerId) {
+    try {
+      const docRef = await this.collection.where("phone","==",phone).get();
+      if (docRef.empty) {
+        throw new Error('User not found');
+      }
+      const doc = docRef.docs[0];
+      await this.collection.doc(doc.id).update({
+        oneSignalId: playerId
+      });
+      return { id: doc.id, ...doc.data(), oneSignalId: playerId };
+    } catch (error) {
+      throw new Error(`Error saving OneSignal ID: ${error.message}`);
+    }
+  }
+
+  async getHomePageData() {
+    try {      
+      const formDoc = await this.landingPage.doc('homepage').get();
+      const formData = formDoc.data();
+      if (!formData) throw new Error('Form not found');
+      return formData?? {}
+    } catch (error) {
+      throw new Error(`Error getting home page data: ${error.message}`);
+    }
+  }
+
+  async getPremiumPlans() {
+    try {      
+      const formDoc = await this.landingPage.doc('premiumPlans').get();
+      const formData = formDoc.data();
+      if (!formData) throw new Error('Form not found');
+      return formData?? {}
+    } catch (error) {
+      throw new Error(`Error getting premium plans: ${error.message}`);
     }
   }
   
