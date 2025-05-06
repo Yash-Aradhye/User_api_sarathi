@@ -11,6 +11,7 @@ class UserService {
     this.formCollection = db.collection('counsellingForms');
     this.registrationForm = db.collection('registrationForm');
     this.landingPage = db.collection('landingPage');
+    this.dynamicScreens = db.collection('dynamicScreens');
   }
 
   async sendOneSignalNotification(playerId, title, message, additionalData = {}) {
@@ -114,7 +115,7 @@ class UserService {
     }
   }
   
-  async login(phone, password = null) {
+  async login(phone, password = null, deviceId = null) {
     try {
       const snapshot = await this.collection
         .where("phone", "==", phone.toString())
@@ -129,6 +130,7 @@ class UserService {
           createdAt: new Date(),
           premiumPlan: null,
           hasLoggedIn: true,
+          currentDeviceId: deviceId,
         };
         const otp = await otpClient.sendOtp(phone);
         console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
@@ -157,6 +159,7 @@ class UserService {
         */
 
         // if (userData.hasLoggedIn) {
+        //   if ( userData.currentDeviceId && userData.currentDeviceId !== deviceId)
         //   throw new Error('User already logged in on another device');
         // }
         const passMatch = await bcrypt.compare(password, userData.password);
@@ -164,14 +167,17 @@ class UserService {
           throw new Error('Invalid password');
         }
         await this.collection.doc(doc.id).update({
+          currentDeviceId: deviceId,
           hasLoggedIn: true
         });
       } else {
         if (userData.hasLoggedIn) {
+          if ( userData.currentDeviceId && userData.currentDeviceId !== deviceId)
           throw new Error('User already logged in on another device');
         }
         
         await this.collection.doc(doc.id).update({
+          currentDeviceId: deviceId,
           hasLoggedIn: true
         });
       }
@@ -692,6 +698,29 @@ class UserService {
     }
   }
   
+  async getContactData() {
+    try {      
+      const formDoc = await this.landingPage.doc('contact').get();
+      const formData = formDoc.data();
+      if (!formData) throw new Error('Form not found');
+      return formData?? {}
+    } catch (error) {
+      throw new Error(`Error getting contact data: ${error.message}`);
+    }
+  }
+  async getDynamicContent() {
+    try {      
+      const formDoc = await this.dynamicScreens.get();
+      const formData = formDoc.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      if (!formData) throw new Error('Form not found');
+      return {data:formData}?? {}
+    } catch (error) {
+      throw new Error(`Error getting dynamic content: ${error.message}`);
+    }
+  }
 
 }
 

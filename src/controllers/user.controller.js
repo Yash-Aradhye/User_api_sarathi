@@ -108,12 +108,12 @@ class UserController {
   // Login
   async login(req, res) {
     try {
-      const { phone, password } = req.body;
+      const { phone, password, deviceId } = req.body;
       if (!phone) {
         return res.status(400).json({ error: 'Phone number is required' });
       }
       
-      const user = await UserService.login(phone, password);
+      const user = await UserService.login(phone, password, deviceId);
       res.status(200).json(user);
     } catch (error) {
       res.status(401).json({ error: error.message });
@@ -320,6 +320,24 @@ class UserController {
   async getPremiumPlans(req, res) {
     try {      
       const data = await UserService.getPremiumPlans();
+      res.status(200).json(data);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getContactData(req, res) {
+    try {      
+      const data = await UserService.getContactData();
+      res.status(200).json(data);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getDynamicContent(req, res) {
+    try {      
+      const data = await UserService.getDynamicContent();
       res.status(200).json(data);
     } catch (error) {
       res.status(400).json({ error: error.message });

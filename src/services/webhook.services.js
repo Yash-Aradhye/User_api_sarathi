@@ -61,6 +61,7 @@ class WebhookService {
           const premiumPlan = {
             planTitle: planDetails.plan ?? "Counselling",
             purchasedDate: new Date(),
+            form: planDetails.form ?? "sarathi-online",
             //expiry after 4 months
             expiryDate: new Date(Date.now() + 4 * 30 * 24 * 60 * 60 * 1000), // 4 months from now
           };
