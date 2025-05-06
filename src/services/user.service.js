@@ -710,13 +710,10 @@ class UserService {
   }
   async getDynamicContent() {
     try {      
-      const formDoc = await this.dynamicScreens.get();
-      const formData = formDoc.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const formDoc = await this.dynamicScreens.doc('screens').get();
+      const formData = formDoc.data();
       if (!formData) throw new Error('Form not found');
-      return {data:formData}?? {}
+      return formData?? {}
     } catch (error) {
       throw new Error(`Error getting dynamic content: ${error.message}`);
     }
