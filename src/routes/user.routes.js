@@ -13,18 +13,18 @@ router.post('/updateName', UserController.updateName);
 router.post('/verifyPhone', UserController.verifyPhone);
 router.post('/', UserController.createUser);
 router.post('/saveOneSignalId', UserController.saveOneSignalId);
-router.get('/get-premium-plans',cacheMiddleware('premiumplan'), UserController.getPremiumPlans);
+router.get('/get-premium-plans',cacheMiddleware('premiumplans'), UserController.getPremiumPlans);
 router.get("/landing",cacheMiddleware('landingpage'), UserController.getLandingPageData);
-router.get("/gethomepage",cacheMiddleware('homepagedata'), UserController.getHomePageData);
+router.get("/gethomepage",cacheMiddleware('homepage'), UserController.getHomePageData);
 router.get("/getcontact",cacheMiddleware('contact'), UserController.getContactData);
-router.get("/getdynamiccontent",cacheMiddleware('dynamicScreens'), UserController.getDynamicContent);
+router.get("/getdynamiccontent",cacheMiddleware('dynamic'), UserController.getDynamicContent);
 // Protected routes (require authentication)
 router.post('/sendpushnotification/:playedId', UserController.sendPushNotification);
 router.use(authMiddleware);
 router.post('/logout', UserController.logout);
 
 // Cached routes
-router.get("/lists", cacheMiddleware('user'), UserController.getUserLists);
+router.get("/lists/:id", cacheMiddleware('user'), UserController.getUserLists);
 router.get("/registrationForm", UserController.getRegistrationForm);
 
 
