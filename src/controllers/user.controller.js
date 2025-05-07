@@ -344,6 +344,52 @@ class UserController {
     }
   }
 
+  async forgotPasswordOTP(req, res) {
+    try {
+      const { phone } = req.params;
+      if (!phone) {
+        return res.status(400).json({ error: 'Phone number is required' });
+      }
+      
+      await UserService.forgotPasswordOTP(phone);
+      res.status(200).json({
+        success: true
+      });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async verifyForgotPasswordOTP(req, res) {
+    try {
+      const { phone } = req.params;
+      const { otp } = req.body;
+      if (!phone || !otp) {
+        return res.status(400).json({ error: 'Phone number and OTP are required' });
+      }
+      
+      const user = await UserService.verifyForgotPasswordOTP(phone, otp);
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async newPassword(req, res) {
+    try {
+      const { phone } = req.params;
+      const { password } = req.body;
+      if (!phone || !password) {
+        return res.status(400).json({ error: 'Phone number and new password are required' });
+      }
+      
+      const user = await UserService.newPassword(phone, password);
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
 }
 
 export default new UserController();

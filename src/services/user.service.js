@@ -719,6 +719,85 @@ class UserService {
     }
   }
 
+  async forgotPasswordOTP(phone) {
+    try {
+      const docRef = await this.collection.where("phone","==",phone).get();
+      if (docRef.empty) {
+        throw new Error('User not found');
+      }
+      const doc = docRef.docs[0];
+      const userData = doc.data();
+      if (!userData) {
+        throw new Error('User not found');
+      }
+      const otp = await otpClient.sendOtp(phone);
+      console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
+      await this.collection.doc(doc.id).update({
+        otp: otp,
+        otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes expiry
+      });
+    } catch (error) {
+      throw new Error(`Error sending OTP: ${error.message}`);
+    }
+  }
+
+  async verifyForgotPasswordOTP(phone, otp) {
+    try {
+      const docRef = await this.collection.where("phone","==",phone).get();
+      if (docRef.empty) {
+        throw new Error('User not found');
+      }
+      const doc = docRef.docs[0];
+      const userData = doc.data();
+      if (!userData) {
+        throw new Error('User not found');
+      }
+      if (!otp) {
+        throw new Error('OTP is required');
+      }
+      if (userData.otp !== otp) {
+        throw new Error('Invalid OTP');
+      }
+      await this.collection.doc(doc.id).update({
+        otp: null,
+        otpExpiry: null,
+        phoneVerified:true
+      });
+      return { id: doc.id, ...userData, phoneVerified:true, verified:true };
+    } catch (error) {
+      throw new Error(`Error verifying phone: ${error.message}`);
+    }
+  }
+
+  async newPassword(phone, password) {
+    try {
+      const docRef = await this.collection.where("phone","==",phone).get();
+      if (docRef.empty) {
+        throw new Error('User not found');
+      }
+      const doc = docRef.docs[0];
+      const userData = doc.data();
+      if (!userData) {
+        throw new Error('User not found');
+      }
+      if (!password) {
+        throw new Error('Password is required');
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await this.collection.doc(doc.id).update({
+        password: hashedPassword,
+        otp: null,
+        otpExpiry: null,
+        phoneVerified:true
+      });
+      return { id: doc.id, ...userData, phoneVerified:true, verified:true };
+    } catch (error) {
+      throw new Error(`Error verifying phone: ${error.message}`);
+    }
+  }
+
+
+
 }
 
 export default new UserService();

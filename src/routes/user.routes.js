@@ -18,6 +18,13 @@ router.get("/landing",cacheMiddleware('landingpage'), UserController.getLandingP
 router.get("/gethomepage",cacheMiddleware('homepage'), UserController.getHomePageData);
 router.get("/getcontact",cacheMiddleware('contact'), UserController.getContactData);
 router.get("/getdynamiccontent",cacheMiddleware('dynamic'), UserController.getDynamicContent);
+
+//Forgot password
+router.get('/forgot-pass-otp/:phone', UserController.forgotPasswordOTP);
+router.post('/verify-pass-otp/:phone', UserController.verifyForgotPasswordOTP);
+router.post('/new-password/:phone', UserController.newPassword);
+
+
 // Protected routes (require authentication)
 router.post('/sendpushnotification/:playedId', UserController.sendPushNotification);
 router.use(authMiddleware);
