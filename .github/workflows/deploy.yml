@@ -54,29 +54,41 @@ jobs:
         echo "  User ${{ secrets.EC2_USER }}" >> ~/.ssh/config
         echo "  StrictHostKeyChecking no" >> ~/.ssh/config
 
-    - name: Create deployment directory
+    - name: Create deployment package
       run: |
-        # Create a clean copy of the code for deployment
+        # Create a clean directory for deployment
         mkdir -p /tmp/deploy
-        rsync -a --exclude='.git' --exclude='.github' --exclude='node_modules' ./ /tmp/deploy/
-        cd /tmp/deploy
-        tar -czf deploy.tar.gz .
+        
+        # Copy necessary files to the deployment directory
+        # Using cp instead of rsync to avoid the file changing issue
+        cp -R ./* /tmp/deploy/
+        cp .env /tmp/deploy/
+        
+        # Remove unnecessary files
+        rm -rf /tmp/deploy/.git /tmp/deploy/.github /tmp/deploy/node_modules
+        
+        # Create archive from deployment directory
+        cd /tmp
+        tar -czf deploy.tar.gz -C deploy .
 
     - name: Deploy to EC2
       run: |
         # Copy files to EC2
-        scp /tmp/deploy/deploy.tar.gz ec2-instance:/tmp/
+        scp /tmp/deploy.tar.gz ec2-instance:~/counselling/Backend/
         
         # Execute remote deployment script
         ssh ec2-instance '
-          mkdir -p ~/counselling/Backend/User_api
-          cd ~/counselling/Backend/User_api
+          cd ~/counselling/Backend
           
-          # Extract and setup
-          tar -xzf /tmp/deploy.tar.gz -C .
-          rm /tmp/deploy.tar.gz
+          # Create directory if it doesn't exist
+          mkdir -p User_api
+          
+          # Extract files
+          tar -xzf deploy.tar.gz -C User_api
+          rm deploy.tar.gz
           
           # Install dependencies
+          cd User_api
           npm ci --production
           
           # Restart service using PM2
