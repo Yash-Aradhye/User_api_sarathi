@@ -16,6 +16,7 @@ router.post('/saveOneSignalId', UserController.saveOneSignalId);
 router.get('/get-premium-plans',cacheMiddleware('premiumplans'), UserController.getPremiumPlans);
 router.get("/landing",cacheMiddleware('landingpage'), UserController.getLandingPageData);
 router.get("/gethomepage",cacheMiddleware('homepage'), UserController.getHomePageData);
+router.get("/getreviews",cacheMiddleware('reviews'), UserController.getReviews);
 router.get("/getenabledfeatures",cacheMiddleware('enabled'), UserController.getEnabledFeatures);
 router.get("/getcontact",cacheMiddleware('contact'), UserController.getContactData);
 router.get("/getdynamiccontent",cacheMiddleware('dynamic'), UserController.getDynamicContent);

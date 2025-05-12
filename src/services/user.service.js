@@ -814,6 +814,17 @@ class UserService {
     }
   }
 
+  async getReviews(){
+    try {      
+      const formDoc = await this.landingPage.doc('reviews').get();
+      const formData = formDoc.data();
+      if (!formData) throw new Error('Form not found');
+      return formData?? {}
+    } catch (error) {
+      throw new Error(`Error getting reviews: ${error.message}`);
+    }
+  }
+
 
 
 }
