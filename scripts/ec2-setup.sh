@@ -1,12 +1,18 @@
 #!/bin/bash
 
 # Update system
-sudo apt-get update
-sudo apt-get upgrade -y
+sudo dnf update -y
 
-# Install Node.js and npm
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
+# Install Node.js and npm for Amazon Linux 2023
+# First install Node.js repository
+sudo dnf install -y nodejs20
+
+# If you specifically need Node.js 18, use this alternative instead:
+# curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+# sudo dnf install -y nodejs
+
+# Install development tools (needed for some npm packages)
+sudo dnf groupinstall -y "Development Tools"
 
 # Install PM2 globally
 sudo npm install -g pm2
