@@ -54,13 +54,18 @@ jobs:
         echo "  User ${{ secrets.EC2_USER }}" >> ~/.ssh/config
         echo "  StrictHostKeyChecking no" >> ~/.ssh/config
 
+    - name: Create deployment directory
+      run: |
+        # Create a clean copy of the code for deployment
+        mkdir -p /tmp/deploy
+        rsync -a --exclude='.git' --exclude='.github' --exclude='node_modules' ./ /tmp/deploy/
+        cd /tmp/deploy
+        tar -czf deploy.tar.gz .
+
     - name: Deploy to EC2
       run: |
-        # Create deployment package
-        tar -czf deploy.tar.gz --exclude=node_modules --exclude=.git --exclude=.github .
-        
         # Copy files to EC2
-        scp deploy.tar.gz ec2-instance:/tmp/
+        scp /tmp/deploy/deploy.tar.gz ec2-instance:/tmp/
         
         # Execute remote deployment script
         ssh ec2-instance '
