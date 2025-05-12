@@ -1,0 +1,83 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [ main ]  # Adjust this to your main branch name if different
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Create .env file
+      run: |
+        echo "PORT=${{ secrets.PORT }}" >> .env
+        echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> .env
+        echo "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}" >> .env
+        echo "FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}" >> .env
+        echo "USER_JWT=${{ secrets.USER_JWT }}" >> .env
+        echo "REDIS_HOST=${{ secrets.REDIS_HOST }}" >> .env
+        echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+        echo "REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}" >> .env
+        echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
+        echo "RAZ_KEY_ID=${{ secrets.RAZ_KEY_ID }}" >> .env
+        echo "RAZ_KEY_SECRET=${{ secrets.RAZ_KEY_SECRET }}" >> .env
+        echo "RAZ_WEBHOOK_SECRET=${{ secrets.RAZ_WEBHOOK_SECRET }}" >> .env
+        echo "SMS_API_ID=${{ secrets.SMS_API_ID }}" >> .env
+        echo "SMS_API_PASSWORD=${{ secrets.SMS_API_PASSWORD }}" >> .env
+        echo "SMS_SENDER_ID=${{ secrets.SMS_SENDER_ID }}" >> .env
+        echo "SMS_TEMPLATE_ID=${{ secrets.SMS_TEMPLATE_ID }}" >> .env
+        echo "ONESIGNAL_APP_ID=${{ secrets.ONESIGNAL_APP_ID }}" >> .env
+        echo "ONESIGNAL_REST_API_KEY=${{ secrets.ONESIGNAL_REST_API_KEY }}" >> .env
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Setup SSH config
+      run: |
+        mkdir -p ~/.ssh
+        echo "Host ec2-instance" >> ~/.ssh/config
+        echo "  HostName ${{ secrets.EC2_HOST }}" >> ~/.ssh/config
+        echo "  User ${{ secrets.EC2_USER }}" >> ~/.ssh/config
+        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+
+    - name: Deploy to EC2
+      run: |
+        # Create deployment package
+        tar -czf deploy.tar.gz --exclude=node_modules --exclude=.git --exclude=.github .
+        
+        # Copy files to EC2
+        scp deploy.tar.gz ec2-instance:/tmp/
+        
+        # Execute remote deployment script
+        ssh ec2-instance '
+          mkdir -p ~/counselling/Backend/User_api
+          cd ~/counselling/Backend/User_api
+          
+          # Extract and setup
+          tar -xzf /tmp/deploy.tar.gz -C .
+          rm /tmp/deploy.tar.gz
+          
+          # Install dependencies
+          npm ci --production
+          
+          # Restart service using PM2
+          if pm2 list | grep -q "user-api"; then
+            pm2 restart user-api
+          else
+            pm2 start src/index.js --name "user-api"
+          fi
+        '

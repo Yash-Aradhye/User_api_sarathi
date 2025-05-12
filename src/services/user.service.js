@@ -12,6 +12,7 @@ class UserService {
     this.registrationForm = db.collection('registrationForm');
     this.landingPage = db.collection('landingPage');
     this.dynamicScreens = db.collection('dynamicScreens');
+    this.metadata = db.collection('metadata');
   }
 
   async sendOneSignalNotification(playerId, title, message, additionalData = {}) {
@@ -120,6 +121,7 @@ class UserService {
       const snapshot = await this.collection
         .where("phone", "==", phone.toString())
         .get();
+
         
       if (snapshot.empty) {
         //create a new user
@@ -131,56 +133,56 @@ class UserService {
           premiumPlan: null,
           hasLoggedIn: true,
           currentDeviceId: deviceId,
+          firstLogin: true,
+          batch:'online'
         };
+
         const otp = await otpClient.sendOtp(phone);
         console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
+
         
         const docRef = await this.collection.add({
           ...user,
           otp: otp,
           otpExpiry: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes expiry
         });
+        const addUserList = await this.metadata.doc('allUserIdLists').get();
+        
+        if(addUserList){
+          const data = addUserList.data();
+          if(data && data.userIdList){
+            const userIdList = data.userIdList;
+            userIdList.push(docRef.id);
+            await this.metadata.doc('allUserIdLists').update({
+              userIdList: userIdList
+            });
+          }else{
+            await this.metadata.doc('allUserIdLists').set({
+              userIdList: [docRef.id]
+            });
+          }
+        }
         return { id: docRef.id, ...user, firstLogin: true };
       }
       
       const doc = snapshot.docs[0];
       const userData = doc.data();
       
-      if (userData.isPremium) {
-        if (!password) {
-          throw new Error('Password required for premium users');
-        }
-        
-        /* 
-          This is the code to check if the user is already logged in on another device
-          and if so, it will throw an error.
-          This is to prevent multiple logins from different devices in production.
-          In development, we can comment this out to allow multiple logins for testing purposes.
-        */
 
-        // if (userData.hasLoggedIn) {
-        //   if ( userData.currentDeviceId && userData.currentDeviceId !== deviceId)
-        //   throw new Error('User already logged in on another device');
-        // }
-        const passMatch = await bcrypt.compare(password, userData.password);
-        if(!passMatch) {
-          throw new Error('Invalid password');
-        }
-        await this.collection.doc(doc.id).update({
-          currentDeviceId: deviceId,
-          hasLoggedIn: true
-        });
-      } else {
-        if (userData.hasLoggedIn) {
+      if (userData.hasLoggedIn) {
           if ( userData.currentDeviceId && userData.currentDeviceId !== deviceId)
           throw new Error('User already logged in on another device');
-        }
-        
-        await this.collection.doc(doc.id).update({
-          currentDeviceId: deviceId,
-          hasLoggedIn: true
-        });
       }
+
+      const otp = await otpClient.sendOtp(phone);
+      console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
+
+       await this.collection.doc(doc.id).update({
+          currentDeviceId: deviceId,
+          hasLoggedIn: true,
+          otp: otp,
+          otpExpiry: new Date(Date.now() + 5 * 60 * 1000)
+        });
 
       const token = jwt.sign({ id: doc.id, phone }, process.env.USER_JWT);
       
@@ -625,6 +627,10 @@ class UserService {
       if (userData.otp !== otp) {
         throw new Error('Invalid OTP');
       }
+      let firstLogin = false;
+      if(userData.firstLogin){
+        firstLogin = true;
+      }
       await this.collection.doc(doc.id).update({
         hasLoggedIn: true,
         otp: null,
@@ -633,7 +639,7 @@ class UserService {
         phoneVerified:true
       });
       await this.invalidateCache(`user:${doc.id}`);
-      return { id: doc.id, ...userData, phoneVerified:true, verified:true };
+      return { id: doc.id, ...userData, phoneVerified:true, verified:true, firstLogin  };
     } catch (error) {
       throw new Error(`Error verifying phone: ${error.message}`);
     }
@@ -794,6 +800,17 @@ class UserService {
       return { id: doc.id, ...userData, phoneVerified:true, verified:true };
     } catch (error) {
       throw new Error(`Error verifying phone: ${error.message}`);
+    }
+  }
+
+  async getEnabledFeatures() {
+    try {      
+      const formDoc = await this.metadata.doc('toggleableFeatured').get();
+      const formData = formDoc.data();
+      if (!formData) throw new Error('Form not found');
+      return formData?? {}
+    } catch (error) {
+      throw new Error(`Error getting enabled features: ${error.message}`);
     }
   }
 

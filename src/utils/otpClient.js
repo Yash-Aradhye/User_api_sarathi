@@ -58,13 +58,13 @@ class OtpClient {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
     // Create message with OTP
-    const message = `THIS IS TEST MESSAGE TO START BULK SMS SERVICE WITH ${otp} HENCE DIGITAL`;
+    const message = `Here is your OTP for verification on app ${otp}. Thank you for signing up on Sarathi App!!`;
     
     try {
-      if(true) {
-        console.log(`Test mode: OTP is 123456`);
-        return '123456';
-      }
+      // if(true) {
+      //   console.log(`Test mode: OTP is 123456`);
+      //   return '123456';
+      // }
       await this.sendSms(phoneNumber, message);
       return otp;
     } catch (error) {
