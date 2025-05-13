@@ -134,76 +134,70 @@ jobs:
           echo 'Installing and configuring Nginx...'
           sudo dnf install nginx -y
           
-          # Create Nginx configuration file using tee with sudo
-          # This approach works because tee runs with sudo privileges
+          # Create Nginx configuration using an alternative approach to avoid heredoc issues
+          sudo tee /etc/nginx/conf.d/user-api.conf > /dev/null <<EOL
+        server {
+            listen 80;
+            server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
+            
+            # Redirect all HTTP requests to HTTPS
+            location / {
+                return 301 https://\$host\$request_uri;
+            }
+        }
+
+        server {
+            listen 443 ssl;
+            server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
+            
+            # SSL certificate configuration
+            ssl_certificate /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem;
+            
+            # SSL settings
+            ssl_protocols TLSv1.2 TLSv1.3;
+            ssl_prefer_server_ciphers on;
+            ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+            ssl_session_timeout 10m;
+            ssl_session_cache shared:SSL:10m;
+            ssl_session_tickets off;
+            
+            # Pass all requests to your Node.js application
+            location / {
+                proxy_pass http://localhost:3000;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade \$http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host \$host;
+                proxy_set_header X-Real-IP \$remote_addr;
+                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto \$scheme;
+                proxy_cache_bypass \$http_upgrade;
+            }
+        }
+        EOL
           
-          # Create empty file first
-          sudo rm -f /etc/nginx/conf.d/user-api.conf
-
-          # HTTP Server block
-          echo 'server {' | sudo tee /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    listen 80;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    # Redirect all HTTP requests to HTTPS' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    location / {' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        return 301 https://$host$request_uri;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    }' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '}' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-
-          # HTTPS Server block
-          echo 'server {' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    listen 443 ssl;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    # SSL certificate configuration' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    ssl_certificate /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    ssl_certificate_key /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    # SSL settings' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    ssl_protocols TLSv1.2 TLSv1.3;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    ssl_prefer_server_ciphers on;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    ssl_session_timeout 10m;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    ssl_session_cache shared:SSL:10m;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    ssl_session_tickets off;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    # Pass all requests to your Node.js application' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    location / {' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_pass http://localhost:3000;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_http_version 1.1;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_set_header Upgrade $http_upgrade;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_set_header Connection "upgrade";' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_set_header Host $host;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_set_header X-Real-IP $remote_addr;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_set_header X-Forwarded-Proto $scheme;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_cache_bypass $http_upgrade;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '    }' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '}' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-
           # Test Nginx configuration and restart
           sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
-          # Make sure SELinux allows Nginx to proxy connections (if SELinux is enabled)
-          sudo setsebool -P httpd_can_network_connect 1 || true
           
-          # Restart service using PM2 with ecosystem config - using absolute paths
+          # Make sure SELinux allows Nginx to proxy connections (if SELinux is enabled)
+          sudo setsebool -P httpd_can_network_connect 1
+          
+          # Restart service using PM2 with ecosystem config
           if [ -f \"ecosystem.config.js\" ]; then
             # Copy ecosystem config if it doesn't exist in the target directory
-            cp ecosystem.config.js ~/counselling/Backend/User_api/ 2>/dev/null || true
+            cp ecosystem.config.js User_api/ 2>/dev/null || true
           fi
           
-          # Use absolute path for User_api directory
-          cd ~/counselling/Backend/User_api
+          cd User_api
           
           # Ensure your index.js is using PORT from .env (which is now 3000)
           grep -q 'PORT = process.env.PORT' src/index.js || echo \"Warning: Please ensure your app is configured to use process.env.PORT!\"
           
           if pm2 list | grep -q \"user-api\"; then
-            pm2 restart ecosystem.config.js --update-env || pm2 restart src/index.js --name \"user-api\" --update-env
+            pm2 restart ecosystem.config.js --update-env
           else
-            pm2 start ecosystem.config.js || pm2 start src/index.js --name \"user-api\"
+            pm2 start ecosystem.config.js
           fi
           
           # Set up SSL renewal cron job with certificate copy after renewal
