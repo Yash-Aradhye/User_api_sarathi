@@ -64,9 +64,6 @@ try {
   });
   
   // Start HTTP server on non-privileged port
-  httpServer.listen(PORT, () => {
-    console.log(`HTTP server running on port ${PORT}`);
-  });
 } catch (error) {
   console.error('Failed to load SSL certificates, falling back to HTTP only:', error);
   
