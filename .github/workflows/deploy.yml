@@ -166,13 +166,13 @@ jobs:
             location / {
                 proxy_pass http://localhost:3000;
                 proxy_http_version 1.1;
-                proxy_set_header Upgrade \$http_upgrade;
+                proxy_set_header Upgrade $http_upgrade;
                 proxy_set_header Connection 'upgrade';
-                proxy_set_header Host \$host;
-                proxy_set_header X-Real-IP \$remote_addr;
-                proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto \$scheme;
-                proxy_cache_bypass \$http_upgrade;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
             }
         }
         EOL
@@ -189,7 +189,7 @@ jobs:
             cp ecosystem.config.js User_api/ 2>/dev/null || true
           fi
           
-          cd User_api
+          cd ~/counselling/Backend/User_api/
           
           # Ensure your index.js is using PORT from .env (which is now 3000)
           grep -q 'PORT = process.env.PORT' src/index.js || echo \"Warning: Please ensure your app is configured to use process.env.PORT!\"
