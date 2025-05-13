@@ -59,12 +59,12 @@ try {
   }, app);
   
   // Start HTTPS server on non-privileged port
-  httpsServer.listen(HTTPS_PORT, () => {
+  httpsServer.listen(PORT, () => {
     console.log(`HTTPS server running on port ${HTTPS_PORT} (${DOMAIN_NAME})`);
   });
   
   // Start HTTP server on non-privileged port
-  httpServer.listen(HTTP_PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`HTTP server running on port ${HTTP_PORT}`);
   });
 } catch (error) {

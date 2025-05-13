@@ -22,7 +22,7 @@ jobs:
 
     - name: Create .env file
       run: |
-        echo "PORT=${{ secrets.PORT }}" >> .env
+        echo "PORT=3000" >> .env  # Changed port to 3000
         echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> .env
         echo "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}" >> .env
         echo "FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}" >> .env
@@ -130,17 +130,58 @@ jobs:
 
                 export default httpsConfig;' > ~/counselling/Backend/User_api/https-config.js
           
-          # Set up port forwarding from 80 to HTTP_PORT and 443 to HTTPS_PORT
-          sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3000
-          sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 3443
+          # Install and configure Nginx as a reverse proxy
+          echo 'Installing and configuring Nginx...'
+          sudo dnf install nginx -y
           
-          # Make iptables rules persistent
-          sudo yum install -y iptables-persistent
-          sudo service iptables save
+          # Create Nginx configuration
+          sudo tee /etc/nginx/conf.d/user-api.conf > /dev/null << 'EOF'
+            server {
+                listen 80;
+                server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
+                
+                # Redirect all HTTP requests to HTTPS
+                location / {
+                    return 301 https://$host$request_uri;
+                }
+            }
+
+            server {
+                listen 443 ssl;
+                server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
+                
+                # SSL certificate configuration
+                ssl_certificate /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem;
+                ssl_certificate_key /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem;
+                
+                # SSL settings
+                ssl_protocols TLSv1.2 TLSv1.3;
+                ssl_prefer_server_ciphers on;
+                ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+                ssl_session_timeout 10m;
+                ssl_session_cache shared:SSL:10m;
+                ssl_session_tickets off;
+                
+                # Pass all requests to your Node.js application
+                location / {
+                    proxy_pass http://localhost:3000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_cache_bypass $http_upgrade;
+                }
+            }
+            EOF
           
-          # Update .env with port configuration
-          echo \"HTTP_PORT=3000\" >> ~/counselling/Backend/User_api/.env
-          echo \"HTTPS_PORT=3443\" >> ~/counselling/Backend/User_api/.env
+          # Test Nginx configuration and restart
+          sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
+          
+          # Make sure SELinux allows Nginx to proxy connections (if SELinux is enabled)
+          sudo setsebool -P httpd_can_network_connect 1
           
           # Restart service using PM2 with ecosystem config
           if [ -f \"ecosystem.config.js\" ]; then
@@ -149,6 +190,10 @@ jobs:
           fi
           
           cd User_api
+          
+          # Ensure your index.js is using PORT from .env (which is now 3000)
+          grep -q 'PORT = process.env.PORT' src/index.js || echo \"Warning: Please ensure your app is configured to use process.env.PORT!\"
+          
           if pm2 list | grep -q \"user-api\"; then
             pm2 restart ecosystem.config.js --update-env
           else
@@ -156,7 +201,7 @@ jobs:
           fi
           
           # Set up SSL renewal cron job with certificate copy after renewal
-          (crontab -l 2>/dev/null; echo \"0 3 * * * sudo certbot renew --quiet && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem ~/counselling/Backend/User_api/certs/ && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem ~/counselling/Backend/User_api/certs/ && sudo chown ec2-user:ec2-user ~/counselling/Backend/User_api/certs/* && sudo chmod 600 ~/counselling/Backend/User_api/certs/* && cd ~/counselling/Backend/User_api && pm2 restart user-api\") | sort - | uniq - | crontab -
+          (crontab -l 2>/dev/null; echo \"0 3 * * * sudo certbot renew --quiet && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem ~/counselling/Backend/User_api/certs/ && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem ~/counselling/Backend/User_api/certs/ && sudo chown ec2-user:ec2-user ~/counselling/Backend/User_api/certs/* && sudo chmod 600 ~/counselling/Backend/User_api/certs/* && sudo systemctl reload nginx && cd ~/counselling/Backend/User_api && pm2 restart user-api\") | sort - | uniq - | crontab -
           
           # Remove the tar file after successful deployment
           rm ~/counselling/Backend/deploy.tar.gz
