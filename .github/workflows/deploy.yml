@@ -135,7 +135,7 @@ jobs:
           sudo dnf install nginx -y
           
           # Create Nginx configuration
-          sudo tee /etc/nginx/conf.d/user-api.conf << 'EOF'
+          cat > /tmp/user-api.conf << 'EOL'
           server {
               listen 80;
               server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
@@ -175,7 +175,10 @@ jobs:
                   proxy_cache_bypass $http_upgrade;
               }
           }
-EOF
+          EOL
+          
+          # Move the configuration file to Nginx directory
+          sudo mv /tmp/user-api.conf /etc/nginx/conf.d/
           
           # Test Nginx configuration and restart
           sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
