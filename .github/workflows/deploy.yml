@@ -139,7 +139,7 @@ jobs:
           
           # Create empty file first
           sudo rm -f /etc/nginx/conf.d/user-api.conf
-          
+
           # HTTP Server block
           echo 'server {' | sudo tee /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '    listen 80;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
@@ -151,7 +151,7 @@ jobs:
           echo '    }' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '}' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          
+
           # HTTPS Server block
           echo 'server {' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '    listen 443 ssl;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
@@ -174,7 +174,6 @@ jobs:
           echo '        proxy_pass http://localhost:3000;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_http_version 1.1;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_set_header Upgrade $http_upgrade;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          # Fix the Connection header line that was causing the error
           echo '        proxy_set_header Connection "upgrade";' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_set_header Host $host;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_set_header X-Real-IP $remote_addr;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
@@ -183,10 +182,9 @@ jobs:
           echo '        proxy_cache_bypass $http_upgrade;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '    }' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '}' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          
+
           # Test Nginx configuration and restart
           sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
-          
           # Make sure SELinux allows Nginx to proxy connections (if SELinux is enabled)
           sudo setsebool -P httpd_can_network_connect 1 || true
           
