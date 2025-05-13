@@ -134,25 +134,25 @@ jobs:
           echo 'Installing and configuring Nginx...'
           sudo dnf install nginx -y
           
-          # Create Nginx configuration using an alternative approach to avoid heredoc issues
-          sudo tee /etc/nginx/conf.d/user-api.conf > /dev/null <<EOL
+          # Create nginx config file without relying on complex heredoc processing
+          cat > /tmp/nginx-config.conf << 'EOF'
         server {
             listen 80;
-            server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
+            server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
             
             # Redirect all HTTP requests to HTTPS
             location / {
-                return 301 https://\$host\$request_uri;
+                return 301 https://$host$request_uri;
             }
         }
 
         server {
             listen 443 ssl;
-            server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
+            server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
             
             # SSL certificate configuration
-            ssl_certificate /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem;
-            ssl_certificate_key /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem;
+            ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
             
             # SSL settings
             ssl_protocols TLSv1.2 TLSv1.3;
@@ -175,7 +175,14 @@ jobs:
                 proxy_cache_bypass $http_upgrade;
             }
         }
-        EOL
+        EOF
+
+          # Replace variables in the nginx config file
+          export DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
+          envsubst < /tmp/nginx-config.conf > /tmp/user-api.conf
+          
+          # Install the nginx config file
+          sudo cp /tmp/user-api.conf /etc/nginx/conf.d/user-api.conf
           
           # Test Nginx configuration and restart
           sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
