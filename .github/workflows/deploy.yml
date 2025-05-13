@@ -174,7 +174,8 @@ jobs:
           echo '        proxy_pass http://localhost:3000;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_http_version 1.1;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_set_header Upgrade $http_upgrade;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo '        proxy_set_header Connection '"'upgrade'"';' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          # Fix the Connection header line that was causing the error
+          echo '        proxy_set_header Connection "upgrade";' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_set_header Host $host;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_set_header X-Real-IP $remote_addr;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
@@ -187,23 +188,24 @@ jobs:
           sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
           
           # Make sure SELinux allows Nginx to proxy connections (if SELinux is enabled)
-          sudo setsebool -P httpd_can_network_connect 1
+          sudo setsebool -P httpd_can_network_connect 1 || true
           
-          # Restart service using PM2 with ecosystem config
+          # Restart service using PM2 with ecosystem config - using absolute paths
           if [ -f \"ecosystem.config.js\" ]; then
             # Copy ecosystem config if it doesn't exist in the target directory
-            cp ecosystem.config.js User_api/ 2>/dev/null || true
+            cp ecosystem.config.js ~/counselling/Backend/User_api/ 2>/dev/null || true
           fi
           
-          cd User_api
+          # Use absolute path for User_api directory
+          cd ~/counselling/Backend/User_api
           
           # Ensure your index.js is using PORT from .env (which is now 3000)
           grep -q 'PORT = process.env.PORT' src/index.js || echo \"Warning: Please ensure your app is configured to use process.env.PORT!\"
           
           if pm2 list | grep -q \"user-api\"; then
-            pm2 restart ecosystem.config.js --update-env
+            pm2 restart ecosystem.config.js --update-env || pm2 restart src/index.js --name \"user-api\" --update-env
           else
-            pm2 start ecosystem.config.js
+            pm2 start ecosystem.config.js || pm2 start src/index.js --name \"user-api\"
           fi
           
           # Set up SSL renewal cron job with certificate copy after renewal
