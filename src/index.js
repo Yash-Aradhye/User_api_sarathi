@@ -3,14 +3,18 @@ import cors from "cors"
 import userRouter from './routes/user.routes.js';
 import paymentRouter from './routes/payment.routes.js';
 import webhookRouter from './routes/webhook.routes.js';
-import fs  from 'fs';
+import fs from 'fs';
 import http from 'http'
 import https from 'https'
 import path from 'path'
 import dotenv from 'dotenv';
 import httpsConfig from '../https-config.js';
+
 dotenv.config();
-const PORT = process.env.PORT || 3000;
+// Use non-privileged ports
+const HTTP_PORT = process.env.HTTP_PORT || 3000;
+const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
+const PORT = process.env.PORT || 3006; // Fallback port
 const DOMAIN_NAME = process.env.DOMAIN_NAME;
 
 const app = express();
@@ -42,36 +46,24 @@ app.get('/', (req, res) => {
   res.status(200).json({ message: 'HEALTH CHECK...' });
 })
 
-
-// HTTP server (for redirect only)
-const httpServer = http.createServer((req, res) => {
-  // Redirect all HTTP traffic to HTTPS
-  res.writeHead(301, { 
-    Location: `https://${req.headers.host}${req.url}` 
-  });
-  res.end();
-});
+// HTTP server that serves the app (not just for redirects)
+const httpServer = http.createServer(app);
 
 let httpsServer;
 
 try {
   // Try to load SSL certificates
-  
-  
   httpsServer = https.createServer({
     key: httpsConfig.key,
     cert: httpsConfig.cert
   }, app);
   
-  // Start HTTPS server
-  httpsServer.listen(443, () => {
-    console.log(`HTTPS server running on port 443 (${DOMAIN_NAME})`);
+  // Start HTTPS server on non-privileged port
+  httpsServer.listen(PORT, () => {
+    console.log(`HTTPS server running on port ${PORT} (${DOMAIN_NAME})`);
   });
   
-  // Start HTTP server (for redirects)
-  httpServer.listen(80, () => {
-    console.log('HTTP server running on port 80 (redirecting to HTTPS)');
-  });
+  // Start HTTP server on non-privileged port
 } catch (error) {
   console.error('Failed to load SSL certificates, falling back to HTTP only:', error);
   
