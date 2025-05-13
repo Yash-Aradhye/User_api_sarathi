@@ -8,6 +8,7 @@ import http from 'http'
 import https from 'https'
 import path from 'path'
 import dotenv from 'dotenv';
+import httpsConfig from '../https-config.js';
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 const DOMAIN_NAME = process.env.DOMAIN_NAME;
@@ -55,7 +56,7 @@ let httpsServer;
 
 try {
   // Try to load SSL certificates
-  const httpsConfig = require('../https-config');
+  
   
   httpsServer = https.createServer({
     key: httpsConfig.key,
