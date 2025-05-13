@@ -98,19 +98,19 @@ jobs:
           
           # Set up SSL certificate (only if needed)
           if [ ! -d \"/etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}\" ]; then
-            sudo apt-get update
-            sudo apt-get install -y certbot
+            sudo dnf update -y
+            sudo dnf install -y certbot
             sudo certbot certonly --standalone -d ${{ secrets.DOMAIN_NAME }} -d www.${{ secrets.DOMAIN_NAME }} --non-interactive --agree-tos -m ${{ secrets.SSL_EMAIL }}
           fi
           
           # Create HTTPS config if it doesn't exist
           if [ ! -f \"https-config.js\" ]; then
-            echo 'import fs from \"fs\";
-            import path from \"path\";
+            echo 'const fs = require(\"fs\");
+            const path = require(\"path\");
             
             const certPath = \"/etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}\";
             
-            export {
+            module.exports = {
               key: fs.readFileSync(path.join(certPath, \"privkey.pem\")),
               cert: fs.readFileSync(path.join(certPath, \"fullchain.pem\"))
             };' > https-config.js
