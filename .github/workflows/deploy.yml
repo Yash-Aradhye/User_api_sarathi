@@ -1,4 +1,4 @@
-name: Deploy to AWS EC2
+name: Deploy to AWS EC2 with HTTPS
 
 on:
   push:
@@ -40,6 +40,8 @@ jobs:
         echo "SMS_TEMPLATE_ID=${{ secrets.SMS_TEMPLATE_ID }}" >> .env
         echo "ONESIGNAL_APP_ID=${{ secrets.ONESIGNAL_APP_ID }}" >> .env
         echo "ONESIGNAL_REST_API_KEY=${{ secrets.ONESIGNAL_REST_API_KEY }}" >> .env
+        # Add your domain name as an environment variable
+        echo "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" >> .env
 
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.7.0
@@ -94,12 +96,41 @@ jobs:
           cd User_api
           npm ci --production
           
-          # Restart service using PM2
-          if pm2 list | grep -q \"user-api\"; then
-            pm2 restart user-api
-          else
-            pm2 start src/index.js --name \"user-api\"
+          # Set up SSL certificate (only if needed)
+          if [ ! -d \"/etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}\" ]; then
+            sudo apt-get update
+            sudo apt-get install -y certbot
+            sudo certbot certonly --standalone -d ${{ secrets.DOMAIN_NAME }} -d www.${{ secrets.DOMAIN_NAME }} --non-interactive --agree-tos -m ${{ secrets.SSL_EMAIL }}
           fi
+          
+          # Create HTTPS config if it doesn't exist
+          if [ ! -f \"https-config.js\" ]; then
+            echo 'const fs = require(\"fs\");
+            const path = require(\"path\");
+            
+            const certPath = \"/etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}\";
+            
+            module.exports = {
+              key: fs.readFileSync(path.join(certPath, \"privkey.pem\")),
+              cert: fs.readFileSync(path.join(certPath, \"fullchain.pem\"))
+            };' > https-config.js
+          fi
+          
+          # Restart service using PM2 with ecosystem config
+          if [ -f \"ecosystem.config.js\" ]; then
+            # Copy ecosystem config if it doesn't exist in the target directory
+            cp ecosystem.config.js User_api/ 2>/dev/null || true
+          fi
+          
+          cd User_api
+          if pm2 list | grep -q \"user-api\"; then
+            pm2 restart ecosystem.config.js --update-env
+          else
+            pm2 start ecosystem.config.js
+          fi
+          
+          # Set up SSL renewal cron job
+          (crontab -l 2>/dev/null; echo \"0 3 * * * sudo certbot renew --quiet\") | sort - | uniq - | crontab -
           
           # Remove the tar file after successful deployment
           rm ~/counselling/Backend/deploy.tar.gz
