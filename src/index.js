@@ -5,17 +5,12 @@ import paymentRouter from './routes/payment.routes.js';
 import webhookRouter from './routes/webhook.routes.js';
 import fs from 'fs';
 import http from 'http'
-import https from 'https'
 import path from 'path'
 import dotenv from 'dotenv';
-import httpsConfig from '../https-config.js';
 
 dotenv.config();
-// Use non-privileged ports
-const HTTP_PORT = process.env.HTTP_PORT || 3000;
-const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
-const PORT = process.env.PORT || 3006; // Fallback port
-const DOMAIN_NAME = process.env.DOMAIN_NAME;
+// Use the PORT from environment (set to 3000 in your GitHub Actions workflow)
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 app.use(json());
@@ -46,39 +41,13 @@ app.get('/', (req, res) => {
   res.status(200).json({ message: 'HEALTH CHECK...' });
 })
 
-// HTTP server that serves the app (not just for redirects)
-const httpServer = http.createServer(app);
-
-let httpsServer;
-
-try {
-  // Try to load SSL certificates
-  httpsServer = https.createServer({
-    key: httpsConfig.key,
-    cert: httpsConfig.cert
-  }, app);
-  
-  // Start HTTPS server on non-privileged port
-  httpsServer.listen(PORT, () => {
-    console.log(`HTTPS server running on port ${PORT} (${DOMAIN_NAME})`);
-  });
-  
-  // Start HTTP server on non-privileged port
-} catch (error) {
-  console.error('Failed to load SSL certificates, falling back to HTTP only:', error);
-  
-  // Fallback to HTTP only if certificates are not available
-  app.listen(PORT, () => {
-    console.log(`HTTP server running on port ${PORT} (no HTTPS)`);
-  });
-}
+// We don't need to handle HTTPS in the Node.js app because Nginx is handling SSL termination
+// Just start the HTTP server listening on all interfaces (0.0.0.0)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received, shutting down gracefully');
-  if (httpsServer) httpsServer.close();
-  httpServer.close();
   process.exit(0);
 });
-
-
-
