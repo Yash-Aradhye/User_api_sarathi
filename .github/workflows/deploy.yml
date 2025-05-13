@@ -135,47 +135,47 @@ jobs:
           sudo dnf install nginx -y
           
           # Create Nginx configuration
-          sudo tee /etc/nginx/conf.d/user-api.conf > /dev/null << 'EOF'
-            server {
-                listen 80;
-                server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
-                
-                # Redirect all HTTP requests to HTTPS
-                location / {
-                    return 301 https://$host$request_uri;
-                }
-            }
+          sudo tee /etc/nginx/conf.d/user-api.conf << 'EOF'
+          server {
+              listen 80;
+              server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
+              
+              # Redirect all HTTP requests to HTTPS
+              location / {
+                  return 301 https://$host$request_uri;
+              }
+          }
 
-            server {
-                listen 443 ssl;
-                server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
-                
-                # SSL certificate configuration
-                ssl_certificate /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem;
-                ssl_certificate_key /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem;
-                
-                # SSL settings
-                ssl_protocols TLSv1.2 TLSv1.3;
-                ssl_prefer_server_ciphers on;
-                ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
-                ssl_session_timeout 10m;
-                ssl_session_cache shared:SSL:10m;
-                ssl_session_tickets off;
-                
-                # Pass all requests to your Node.js application
-                location / {
-                    proxy_pass http://localhost:3000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                    proxy_cache_bypass $http_upgrade;
-                }
-            }
-            EOF
+          server {
+              listen 443 ssl;
+              server_name ${{ secrets.DOMAIN_NAME }} www.${{ secrets.DOMAIN_NAME }};
+              
+              # SSL certificate configuration
+              ssl_certificate /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem;
+              
+              # SSL settings
+              ssl_protocols TLSv1.2 TLSv1.3;
+              ssl_prefer_server_ciphers on;
+              ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+              ssl_session_timeout 10m;
+              ssl_session_cache shared:SSL:10m;
+              ssl_session_tickets off;
+              
+              # Pass all requests to your Node.js application
+              location / {
+                  proxy_pass http://localhost:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_cache_bypass $http_upgrade;
+              }
+          }
+          EOF
           
           # Test Nginx configuration and restart
           sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
