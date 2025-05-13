@@ -134,55 +134,48 @@ jobs:
           echo 'Installing and configuring Nginx...'
           sudo dnf install nginx -y
           
-          # Create nginx config file without relying on complex heredoc processing
-          cat > /tmp/nginx-config.conf << 'EOF'
-        server {
-            listen 80;
-            server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
-            
-            # Redirect all HTTP requests to HTTPS
-            location / {
-                return 301 https://$host$request_uri;
-            }
-        }
-
-        server {
-            listen 443 ssl;
-            server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
-            
-            # SSL certificate configuration
-            ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
-            ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
-            
-            # SSL settings
-            ssl_protocols TLSv1.2 TLSv1.3;
-            ssl_prefer_server_ciphers on;
-            ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
-            ssl_session_timeout 10m;
-            ssl_session_cache shared:SSL:10m;
-            ssl_session_tickets off;
-            
-            # Pass all requests to your Node.js application
-            location / {
-                proxy_pass http://localhost:3000;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection 'upgrade';
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-                proxy_cache_bypass $http_upgrade;
-            }
-        }
-        EOF
-
-          # Replace variables in the nginx config file
-          export DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}
-          envsubst < /tmp/nginx-config.conf > /tmp/user-api.conf
+          # Create the nginx config file directly with a simple echo approach
+          # Store domain name in a variable
+          DOMAIN=\"${{ secrets.DOMAIN_NAME }}\"
           
-          # Install the nginx config file
-          sudo cp /tmp/user-api.conf /etc/nginx/conf.d/user-api.conf
+          # Create the file using direct string concatenation - HTTP server block
+          echo \"server {\" | sudo tee /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    listen 80;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    server_name \$DOMAIN www.\$DOMAIN;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    # Redirect all HTTP requests to HTTPS\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    location / {\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        return 301 https://\\\$host\\\$request_uri;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    }\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"}\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          
+          # HTTPS server block
+          echo \"server {\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    listen 443 ssl;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    server_name \$DOMAIN www.\$DOMAIN;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    # SSL certificate configuration\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_certificate /etc/letsencrypt/live/\$DOMAIN/fullchain.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_certificate_key /etc/letsencrypt/live/\$DOMAIN/privkey.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    # SSL settings\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_protocols TLSv1.2 TLSv1.3;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_prefer_server_ciphers on;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_session_timeout 10m;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_session_cache shared:SSL:10m;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_session_tickets off;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    # Pass all requests to your Node.js application\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    location / {\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_pass http://localhost:3000;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_http_version 1.1;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header Upgrade \\\$http_upgrade;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header Connection 'upgrade';\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header Host \\\$host;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header X-Real-IP \\\$remote_addr;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header X-Forwarded-Proto \\\$scheme;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_cache_bypass \\\$http_upgrade;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    }\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"}\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           
           # Test Nginx configuration and restart
           sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
