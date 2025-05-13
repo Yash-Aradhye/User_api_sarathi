@@ -103,19 +103,32 @@ jobs:
             sudo certbot certonly --standalone -d ${{ secrets.DOMAIN_NAME }} -d www.${{ secrets.DOMAIN_NAME }} --non-interactive --agree-tos -m ${{ secrets.SSL_EMAIL }}
           fi
           
-          # Create HTTPS config if it doesn't exist
-          if [ ! -f \"https-config.js\" ]; then
-            echo 'import fs from \"fs\";
-            import path from \"path\";
-            
-            const certPath = \"/etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}\";
-            
-            const httpsConfig = {
-              key: fs.readFileSync(path.join(certPath, \"privkey.pem\")),
-              cert: fs.readFileSync(path.join(certPath, \"fullchain.pem\"))
-            };
-            export default httpsConfig;'> https-config.js
-          fi
+          # Create cert directory in app folder
+          mkdir -p ~/counselling/Backend/User_api/certs
+          
+          # Copy SSL certificates to app directory with correct permissions
+          sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem ~/counselling/Backend/User_api/certs/
+          sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem ~/counselling/Backend/User_api/certs/
+          
+          # Fix permissions so app user can read the certificates
+          sudo chown ec2-user:ec2-user ~/counselling/Backend/User_api/certs/*
+          sudo chmod 600 ~/counselling/Backend/User_api/certs/*
+          
+          # Create HTTPS config using the copied certificates
+          echo 'import fs from \"fs\";
+                import path from \"path\";
+                import { fileURLToPath } from \"url\";
+
+                const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+                const certPath = path.join(__dirname, \"certs\");
+
+                const httpsConfig = {
+                  key: fs.readFileSync(path.join(certPath, \"privkey.pem\")),
+                  cert: fs.readFileSync(path.join(certPath, \"fullchain.pem\"))
+                };
+
+                export default httpsConfig;' > ~/counselling/Backend/User_api/https-config.js
           
           # Restart service using PM2 with ecosystem config
           if [ -f \"ecosystem.config.js\" ]; then
@@ -130,8 +143,8 @@ jobs:
             pm2 start ecosystem.config.js
           fi
           
-          # Set up SSL renewal cron job
-          (crontab -l 2>/dev/null; echo \"0 3 * * * sudo certbot renew --quiet\") | sort - | uniq - | crontab -
+          # Set up SSL renewal cron job with certificate copy after renewal
+          (crontab -l 2>/dev/null; echo \"0 3 * * * sudo certbot renew --quiet && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem ~/counselling/Backend/User_api/certs/ && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem ~/counselling/Backend/User_api/certs/ && sudo chown ec2-user:ec2-user ~/counselling/Backend/User_api/certs/* && sudo chmod 600 ~/counselling/Backend/User_api/certs/* && cd ~/counselling/Backend/User_api && pm2 restart user-api\") | sort - | uniq - | crontab -
           
           # Remove the tar file after successful deployment
           rm ~/counselling/Backend/deploy.tar.gz
