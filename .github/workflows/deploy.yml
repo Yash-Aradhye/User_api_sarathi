@@ -105,15 +105,16 @@ jobs:
           
           # Create HTTPS config if it doesn't exist
           if [ ! -f \"https-config.js\" ]; then
-            echo 'const fs = require(\"fs\");
-            const path = require(\"path\");
+            echo 'import fs from \"fs\";
+            import path from \"path\";
             
             const certPath = \"/etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}\";
             
-            module.exports = {
+            const httpsConfig = {
               key: fs.readFileSync(path.join(certPath, \"privkey.pem\")),
               cert: fs.readFileSync(path.join(certPath, \"fullchain.pem\"))
-            };' > https-config.js
+            };
+            export default httpsConfig;'> https-config.js
           fi
           
           # Restart service using PM2 with ecosystem config
