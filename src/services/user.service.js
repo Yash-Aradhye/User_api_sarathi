@@ -131,14 +131,12 @@ class UserService {
           isPremium: false,
           createdAt: new Date(),
           premiumPlan: null,
-          hasLoggedIn: true,
           currentDeviceId: deviceId,
-          firstLogin: true,
           batch:'online'
         };
 
         const otp = await otpClient.sendOtp(phone);
-        console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
+        // console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
 
         
         const docRef = await this.collection.add({
@@ -180,6 +178,7 @@ class UserService {
        await this.collection.doc(doc.id).update({
           currentDeviceId: deviceId,
           hasLoggedIn: true,
+          firstLogin: true,
           otp: otp,
           otpExpiry: new Date(Date.now() + 5 * 60 * 1000)
         });
