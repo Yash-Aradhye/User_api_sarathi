@@ -8,7 +8,7 @@ class OtpClient {
     this.apiUrl = 'https://www.bulksmsplans.com/api/send_sms';
     this.apiId = process.env.SMS_API_ID;
     this.apiPassword = process.env.SMS_API_PASSWORD;
-    this.senderId = process.env.SMS_SENDER_ID || 'HDTSMS';
+    this.senderId = process.env.SMS_SENDER_ID || 'YASHCL';
     this.templateId = process.env.SMS_TEMPLATE_ID || '176983';
   }
 
@@ -62,7 +62,7 @@ class OtpClient {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
     // Create message with OTP
-    const message = `Here is your OTP for verification on app ${otp}. Thank you for signing up on Sarathi App!!`;
+    const message = `Your login OTP is ${otp}. Welcome to Saarthi by Yash Aradhye.`;
     
     try {
       if(phoneNumber == '1231231231' || phoneNumber == '1231231232') {
