@@ -637,8 +637,9 @@ class UserService {
         firstLogin: false,
         phoneVerified:true
       });
+      const token = jwt.sign({ id: doc.id, phone }, process.env.USER_JWT);
       await this.invalidateCache(`user:${doc.id}`);
-      return { id: doc.id, ...userData, phoneVerified:true, verified:true, firstLogin  };
+      return { id: doc.id, ...userData, phoneVerified:true, verified:true, firstLogin, token  };
     } catch (error) {
       throw new Error(`Error verifying phone: ${error.message}`);
     }
