@@ -132,7 +132,8 @@ class UserService {
           createdAt: new Date(),
           premiumPlan: null,
           currentDeviceId: deviceId,
-          batch:'online'
+          batch:'online',
+          firstLogin: true,
         };
 
         const otp = await otpClient.sendOtp(phone);
@@ -178,7 +179,6 @@ class UserService {
        await this.collection.doc(doc.id).update({
           currentDeviceId: deviceId,
           hasLoggedIn: true,
-          firstLogin: true,
           otp: otp,
           otpExpiry: new Date(Date.now() + 5 * 60 * 1000)
         });
