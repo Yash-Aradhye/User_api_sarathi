@@ -1,4 +1,5 @@
 import { db } from '../../config/firebase.js';
+import otpClient from '../utils/otpClient.js';
 
 class WebhookService {
   constructor() {
@@ -46,12 +47,10 @@ class WebhookService {
       );
       
       const batch = db.batch();
-      
       // Update user's order information
       batch.update(this.userCollection.doc(userDoc.id), {
         orders: updatedOrders
       });
-      
       // If this is a premium plan payment, update user's premium status
       if (isPremiumPayment) {
         const order = userData.orders.find(o => o.orderId === orderId);
@@ -72,10 +71,9 @@ class WebhookService {
           });
         }
       }
-      
       // Commit all updates
       await batch.commit();
-      
+      await otpClient.sendSuccessSms(userData.phone);
       return { success: true };
     } catch (error) {
       console.error('Error handling payment captured:', error);
