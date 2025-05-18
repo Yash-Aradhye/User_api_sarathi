@@ -168,7 +168,7 @@ class UserService {
       const userData = doc.data();
       
 
-      if (userData.hasLoggedIn && !(phone == "1231231231" || phone == "1231231232")) {
+      if (userData.isPremium && userData.hasLoggedIn && !(phone == "1231231231" || phone == "1231231232")) {
           if ( userData.currentDeviceId && userData.currentDeviceId !== deviceId)
           throw new Error('User already logged in on another device');
       }
