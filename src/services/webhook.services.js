@@ -5,7 +5,6 @@ class WebhookService {
   constructor() {
     this.userCollection = db.collection('users');
     this.paymentLogsCollection = db.collection('paymentLogs');
-    this.downtimePayments = db.collection('downtimePayments');
   }
   
   async handlePaymentCaptured(event,payment) {
@@ -179,53 +178,7 @@ class WebhookService {
     }
   }
 
-  async handlePaymentDowntimeStarted(payment) {
-    try {
-      const orderId = payment.order_id;
-      
-      // Log downtime event
-      await this.logPaymentEvent('payment.downtime.started', payment);
-      
-      //log in downtime payments collection
-      await this.downtimePayments.add({
-        orderId,
-        paymentDetails: payment,
-        createdAt: new Date()
-      });
 
-      // Find user with this order
-      const usersSnapshot = await this.findUserWithOrder(orderId);
-      
-      if (!usersSnapshot.empty) {
-        const userDoc = usersSnapshot.docs[0];
-        const userData = userDoc.data();
-        
-        // Update the specific order in user's array
-        const updatedOrders = userData.orders.map(order => {
-          if (order.orderId === orderId) {
-            return {
-              ...order,
-              downtimeStatus: 'started',
-              downtimeDetails: payment,
-              updatedAt: new Date()
-            };
-          }
-          return order;
-        });
-        
-        // Update user's order information
-        await this.userCollection.doc(userDoc.id).update({
-          orders: updatedOrders
-        });
-      }
-
-      throw new Error('Payment downtime started');
-
-    } catch (error) {
-      console.error('Error handling payment downtime started:', error);
-      throw error;
-    }
-  }
   
   async logPaymentEvent(eventType, data) {
     try {
