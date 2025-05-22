@@ -37,7 +37,7 @@ class WebhookController {
         case 'payment.failed':
         case 'payment.dispute.created':
         case ' payment.downtime.failed':
-          await WebhookService.handlePaymentFailed(event.payload.payment.entity);
+          await WebhookService.handlePaymentFailed(event.event,event.payload.payment.entity);
           break;
         case 'payment.downtime.started':
           await WebhookService.handlePaymentDowntimeStarted(event.payload.payment.entity);

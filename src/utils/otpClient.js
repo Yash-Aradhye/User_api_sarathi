@@ -47,7 +47,6 @@ class OtpClient {
       console.log(`SMS sent to ${cleanPhoneNumber}: ${message}`);
       return response.data;
     } catch (error) {
-      console.error('Error sending SMS:', error);
       throw new Error(`Failed to send SMS: ${error.message}`);
     }
   }
@@ -86,7 +85,6 @@ class OtpClient {
       console.log(`SMS sent to ${cleanPhoneNumber}: ${message}`);
       return response.data;
     } catch (error) {
-      console.error('Error sending SMS:', error);
       throw new Error(`Failed to send SMS: ${error.message}`);
     }
   }
