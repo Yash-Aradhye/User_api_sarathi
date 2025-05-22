@@ -28,13 +28,20 @@ class WebhookController {
       // Handle different event types
       switch(event.event) {
         case 'payment.captured':
-          await WebhookService.handlePaymentCaptured(event.payload.payment.entity);
+        case 'payment.authorized':
+        case 'payment.downtime.resolved':
+        case 'payment.dispute.won':
+          await WebhookService.handlePaymentCaptured(event.event,event.payload.payment.entity);
           break;
           
         case 'payment.failed':
+        case 'payment.dispute.created':
+        case ' payment.downtime.failed':
           await WebhookService.handlePaymentFailed(event.payload.payment.entity);
           break;
-          
+        case 'payment.downtime.started':
+          await WebhookService.handlePaymentDowntimeStarted(event.payload.payment.entity);
+          break;
         case 'order.paid':
           await WebhookService.handleOrderPaid(event.payload.order.entity);
           break;

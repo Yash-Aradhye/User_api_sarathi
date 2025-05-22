@@ -5,9 +5,10 @@ class WebhookService {
   constructor() {
     this.userCollection = db.collection('users');
     this.paymentLogsCollection = db.collection('paymentLogs');
+    this.downtimePayments = db.collection('downtimePayments');
   }
   
-  async handlePaymentCaptured(payment) {
+  async handlePaymentCaptured(event,payment) {
     try {
       const orderId = payment.order_id;
       const paymentId = payment.id;
@@ -15,7 +16,7 @@ class WebhookService {
       
       
       // Log payment event
-      await this.logPaymentEvent('payment.captured', payment);
+      await this.logPaymentEvent(event, payment);
       
       // Find user with this order
       const usersSnapshot = await this.findUserWithOrder(orderId);
@@ -81,12 +82,12 @@ class WebhookService {
     }
   }
   
-  async handlePaymentFailed(payment) {
+  async handlePaymentFailed(event = 'payment.failed',payment) {
     try {
       const orderId = payment.order_id;
       
       // Log payment event
-      await this.logPaymentEvent('payment.failed', payment);
+      await this.logPaymentEvent(event, payment);
       
       // Find user with this order
       const usersSnapshot = await this.findUserWithOrder(orderId);
@@ -174,6 +175,54 @@ class WebhookService {
       return { success: true };
     } catch (error) {
       console.error('Error handling refund created:', error);
+      throw error;
+    }
+  }
+
+  async handlePaymentDowntimeStarted(payment) {
+    try {
+      const orderId = payment.order_id;
+      
+      // Log downtime event
+      await this.logPaymentEvent('payment.downtime.started', payment);
+      
+      //log in downtime payments collection
+      await this.downtimePayments.add({
+        orderId,
+        paymentDetails: payment,
+        createdAt: new Date()
+      });
+
+      // Find user with this order
+      const usersSnapshot = await this.findUserWithOrder(orderId);
+      
+      if (!usersSnapshot.empty) {
+        const userDoc = usersSnapshot.docs[0];
+        const userData = userDoc.data();
+        
+        // Update the specific order in user's array
+        const updatedOrders = userData.orders.map(order => {
+          if (order.orderId === orderId) {
+            return {
+              ...order,
+              downtimeStatus: 'started',
+              downtimeDetails: payment,
+              updatedAt: new Date()
+            };
+          }
+          return order;
+        });
+        
+        // Update user's order information
+        await this.userCollection.doc(userDoc.id).update({
+          orders: updatedOrders
+        });
+      }
+
+      throw new Error('Payment downtime started');
+
+    } catch (error) {
+      console.error('Error handling payment downtime started:', error);
       throw error;
     }
   }
