@@ -1,6 +1,6 @@
 import redis from '../config/redisClient.js';
 
-const cacheMiddleware = (keyPrefix, expireTime = 3600) => {
+const cacheMiddleware = (keyPrefix, expireTime = 300) => {
     return async (req, res, next) => {
         try {
             const key = `${keyPrefix}:${req.originalUrl}`;

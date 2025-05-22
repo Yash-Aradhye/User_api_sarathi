@@ -13,6 +13,8 @@ class UserService {
     this.landingPage = db.collection('landingPage');
     this.dynamicScreens = db.collection('dynamicScreens');
     this.metadata = db.collection('metadata');
+    this.appointments = db.collection('appointments');
+    this.cancellations = db.collection('cancellations');
   }
 
   async sendOneSignalNotification(playerId, title, message, additionalData = {}) {
@@ -825,8 +827,31 @@ class UserService {
     }
   }
 
+  async cancellationReason(data) {
+    try {
+      await this.cancellations.add({
+        ...data,
+        createdAt: new Date()
+      });
+      return {success: true};
+    } catch (error) {
+      throw new Error(`Error setting cancellation reasons: ${error.message}`);
+    }
+  }
 
 
+  async bookAppointment(appointmentData) {
+    try {
+      const appointment = {
+        ...appointmentData,
+        createdAt: new Date()
+      };
+      const docRef = await this.appointments.add(appointment);
+      return { id: docRef.id, ...appointment };
+    } catch (error) {
+      throw new Error(`Error booking appointment: ${error.message}`);
+    }
+  }
 }
 
 export default new UserService();

@@ -59,6 +59,9 @@ router.delete('/formsteps/:id', UserController.deleteFormSteps);
 router.get('/formdata/:phone/:formId', UserController.getUserFormData);
 router.post('/formdata/:phone/:formId', UserController.updateUserFormData);
 
+router.post('/book-appointment', UserController.bookAppointment);
+router.post('/cancellation-reason', UserController.cancellationReason);
+
 
 
 

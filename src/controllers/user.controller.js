@@ -407,6 +407,34 @@ class UserController {
       res.status(404).json({ error: error.message });
     }
   }
+  
+  async cancellationReason(req, res) {
+    try {
+      const data = req.body;
+      if (!data) {
+        return res.status(400).json({ error: 'Cancellation Data is required' });
+      }
+      
+      const user = await UserService.cancellationReason(data);
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async bookAppointment(req, res) {
+    try {
+      const appointmentData = req.body;
+      if (!appointmentData) {
+        return res.status(400).json({ error: 'Phone number and appointment data are required' });
+      }
+      
+      const user = await UserService.bookAppointment(appointmentData);
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
 
 }
 
