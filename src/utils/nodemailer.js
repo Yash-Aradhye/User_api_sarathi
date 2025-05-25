@@ -155,8 +155,8 @@ class EmailService {
         <div style="background-color: #f5f5f5; padding: 15px; margin: 15px 0; border-left: 4px solid #4CAF50;">
           <p><strong>Amount:</strong> ₹${paymentDetails.amount}</p>
           <p><strong>Transaction ID:</strong> ${paymentDetails.id}</p>
-          <p><strong>Date:</strong> ${new Date(paymentDetails.date).toLocaleDateString()}</p>
-          <p><strong>Plan:</strong> ${paymentDetails.notes.planName}</p>
+          <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+          <p><strong>Plan:</strong> ${paymentDetails.notes.planTitle}</p>
         </div>
         <p>If you have any questions about your payment, please contact our support team.</p>
         <p>Best regards,<br/>Yash Aradhye & Team</p>
@@ -167,6 +167,6 @@ class EmailService {
   }
 }
 
-new EmailService().sendWelcomeEmail('mayankmchandratre@gmail.com', 'Mayank Chandratre');
+
 
 export default new EmailService();
