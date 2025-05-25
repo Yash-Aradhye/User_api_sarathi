@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import redis from '../config/redisClient.js';
 import otpClient from '../utils/otpClient.js';
 import axios from 'axios';
+import nodemailer from '../utils/nodemailer.js';
 
 class UserService {
   constructor() {
@@ -847,6 +848,11 @@ class UserService {
         createdAt: new Date()
       };
       const docRef = await this.appointments.add(appointment);
+      await nodemailer.sendMail({
+        to: 'yasharadhyeapp@gmail.com',
+        subject: `Appointment Booked ${appointment.date} at ${appointment.time} by ${appointment.name}- ${appointment.phone}`,
+        text: `An appointment has been booked for ${appointment.date} at ${appointment.time} By ${appointment.name}. Phone: ${appointment.phone}. Email: ${appointment.email}. Details: ${appointment.details}.`
+      });
       return { id: docRef.id, ...appointment };
     } catch (error) {
       throw new Error(`Error booking appointment: ${error.message}`);
