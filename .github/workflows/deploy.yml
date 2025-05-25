@@ -39,10 +39,16 @@ jobs:
         echo "SMS_SENDER_ID=${{ secrets.SMS_SENDER_ID }}" >> .env
         echo "SMS_OTP_TEMPLATE_ID=${{ secrets.SMS_OTP_TEMPLATE_ID }}" >> .env
         echo "SMS_SUCCESS_TEMPLATE_ID=${{ secrets.SMS_SUCCESS_TEMPLATE_ID }}" >> .env
+        echo "EMAIL_HOST=${{ secrets.EMAIL_HOST }}" >> .env
+        echo "EMAIL_PORT=${{ secrets.EMAIL_PORT }}" >> .env
+        echo "EMAIL_USER=${{ secrets.EMAIL_USER }}" >> .env
+        echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
+        echo "EMAIL_FROM=${{ secrets.EMAIL_FROM }}" >> .env
         echo "ONESIGNAL_APP_ID=${{ secrets.ONESIGNAL_APP_ID }}" >> .env
         echo "ONESIGNAL_REST_API_KEY=${{ secrets.ONESIGNAL_REST_API_KEY }}" >> .env
         # Add your domain name as an environment variable
         echo "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" >> .env
+
 
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.7.0

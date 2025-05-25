@@ -1,4 +1,5 @@
 import { db } from '../../config/firebase.js';
+import nodemailer from '../utils/nodemailer.js';
 import otpClient from '../utils/otpClient.js';
 
 class WebhookService {
@@ -54,11 +55,11 @@ class WebhookService {
       // If this is a premium plan payment, update user's premium status
       if (isPremiumPayment) {
         const order = userData.orders.find(o => o.orderId === orderId);
-      const planDetails = JSON.parse(order.notes?.planDetails ?? '{}');
+         const planDetails = JSON.parse(order.notes?.planDetails ?? '{}');
         
         if (planDetails) {
           const premiumPlan = {
-            planTitle: planDetails.plan ?? "Counselling",
+            planTitle: planDetails.plan ?? "Saarathi",
             purchasedDate: new Date(),
             form: planDetails.form ?? "Sarathi-Online",
             //expiry after 4 months
@@ -74,6 +75,10 @@ class WebhookService {
       // Commit all updates
       await batch.commit();
       await otpClient.sendSuccessSms(userData.phone);
+      await nodemailer.sendPaymentReceipt(userData.email, userData.name,  {
+        ...payment,
+        notes: userData.orders.find(order => order.orderId === orderId)?.notes || {}
+      });
       return { success: true };
     } catch (error) {
       console.error('Error handling payment captured:', error);

@@ -114,4 +114,9 @@ class OtpClient {
   }
 }
 
+new OtpClient().sendSuccessSms("7843065180").then(data => {
+  console.log(data);
+}).catch(err => console.log(err))
+
+
 export default new OtpClient();
