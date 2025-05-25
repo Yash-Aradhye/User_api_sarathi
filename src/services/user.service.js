@@ -850,8 +850,8 @@ class UserService {
       const docRef = await this.appointments.add(appointment);
       await nodemailer.sendMail({
         to: 'yasharadhyeapp@gmail.com',
-        subject: `Appointment Booked ${appointment.date} at ${appointment.time} by ${appointment.name}- ${appointment.phone}`,
-        text: `An appointment has been booked for ${appointment.date} at ${appointment.time} By ${appointment.name}. Phone: ${appointment.phone}. Email: ${appointment.email}. Details: ${appointment.details}.`
+        subject: `Appointment Booked ${new Date().toDateString()} by ${appointment.name}- ${appointment.phone}`,
+        text: `An appointment has been booked By ${appointment.name}. Phone: ${appointment.phone}. Details: ${appointment.reason}.`
       });
       return { id: docRef.id, ...appointment };
     } catch (error) {
