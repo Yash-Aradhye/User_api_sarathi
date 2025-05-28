@@ -651,6 +651,7 @@ class UserService {
       if(userData.firstLogin){
         firstLogin = true;
       }
+      if(currentDeviceId)
       await this.collection.doc(doc.id).update({
         hasLoggedIn: true,
         otp: null,
@@ -658,6 +659,14 @@ class UserService {
         firstLogin: false,
         phoneVerified:true,
         currentDeviceId: currentDeviceId
+      });
+      else
+      await this.collection.doc(doc.id).update({
+        hasLoggedIn: true,
+        otp: null,
+        otpExpiry: null,
+        firstLogin: false,
+        phoneVerified:true
       });
       const token = jwt.sign({ id: doc.id, phone }, process.env.USER_JWT);
       await this.invalidateCache(`user:${doc.id}`);
