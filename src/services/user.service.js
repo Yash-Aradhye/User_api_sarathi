@@ -633,7 +633,7 @@ class UserService {
     }
 }
 
-  async verifyPhone(phone, otp, currentDeviceId) {
+  async verifyPhone(phone, otp, currentDeviceId=null) {
     try {
       const docRef = await this.collection.where("phone","==",phone).get();
       if (docRef.empty) {
@@ -652,22 +652,22 @@ class UserService {
         firstLogin = true;
       }
       if(currentDeviceId)
-      await this.collection.doc(doc.id).update({
-        hasLoggedIn: true,
-        otp: null,
-        otpExpiry: null,
-        firstLogin: false,
-        phoneVerified:true,
-        currentDeviceId: currentDeviceId
-      });
+        await this.collection.doc(doc.id).update({
+          hasLoggedIn: true,
+          otp: null,
+          otpExpiry: null,
+          firstLogin: false,
+          phoneVerified:true,
+          currentDeviceId: currentDeviceId
+        });
       else
-      await this.collection.doc(doc.id).update({
-        hasLoggedIn: true,
-        otp: null,
-        otpExpiry: null,
-        firstLogin: false,
-        phoneVerified:true
-      });
+        await this.collection.doc(doc.id).update({
+          hasLoggedIn: true,
+          otp: null,
+          otpExpiry: null,
+          firstLogin: false,
+          phoneVerified:true
+        });
       const token = jwt.sign({ id: doc.id, phone }, process.env.USER_JWT);
       await this.invalidateCache(`user:${doc.id}`);
       return { id: doc.id, ...userData, phoneVerified:true, verified:true, firstLogin, token  };
