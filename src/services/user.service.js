@@ -199,7 +199,8 @@ class UserService {
   async logout(userId) {
     try {
       await this.collection.doc(userId).update({
-        hasLoggedIn: false
+        hasLoggedIn: false,
+        currentDeviceId: null
       });
     } catch (error) {
       throw new Error(`Error during logout: ${error.message}`);
