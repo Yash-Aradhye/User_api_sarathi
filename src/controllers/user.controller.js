@@ -268,12 +268,12 @@ class UserController {
 
   async verifyPhone(req, res) {
     try {
-      const { phone, otp } = req.body;
+      const { phone, otp, currentDeviceId } = req.body;
       if (!phone || !otp) {
         return res.status(400).json({ error: 'Phone number and OTP are required' });
       }
       
-      const user = await UserService.verifyPhone(phone, otp);
+      const user = await UserService.verifyPhone(phone, otp, currentDeviceId);
       res.status(200).json(user);
     } catch (error) {
       res.status(400).json({ error: error.message });

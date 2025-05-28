@@ -79,7 +79,7 @@ class UserService {
       console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
 
        await this.collection.doc(doc.id).update({
-          currentDeviceId: deviceId,
+          
           
           otp: otp,
           otpExpiry: new Date(Date.now() + 5 * 60 * 1000)
@@ -292,6 +292,7 @@ class UserService {
     try {
       const user = await this.collection.where('phone', '==', phone).get();
       
+
       if (user.empty) {
         return {
           isPremium: false
@@ -325,6 +326,19 @@ class UserService {
         return {
           isPremium: false
         };
+      }
+
+      const premiumPlans = await this.landingPage.doc('premiumPlans').get();
+
+      if (premiumPlans.exists) {
+        const plansData = premiumPlans.data();
+        if (plansData && plansData.plans) {
+          let currPlan = data.premiumPlan.planTitle == "Saarthi - Office Enrollment" ? plansData.plans.find(plan => plan.title === data.premiumPlan.planTitle): plansData.plans.find(plan => plan.title === "Saarthi+") ;
+          if (currPlan) {
+            data.premiumPlan.planTitle = currPlan.title;
+            data.premiumPlan.form = currPlan.form;
+          }
+        }
       }
 
       return {
@@ -617,7 +631,7 @@ class UserService {
     }
 }
 
-  async verifyPhone(phone, otp) {
+  async verifyPhone(phone, otp, currentDeviceId) {
     try {
       const docRef = await this.collection.where("phone","==",phone).get();
       if (docRef.empty) {
@@ -640,7 +654,8 @@ class UserService {
         otp: null,
         otpExpiry: null,
         firstLogin: false,
-        phoneVerified:true
+        phoneVerified:true,
+        currentDeviceId: currentDeviceId
       });
       const token = jwt.sign({ id: doc.id, phone }, process.env.USER_JWT);
       await this.invalidateCache(`user:${doc.id}`);
