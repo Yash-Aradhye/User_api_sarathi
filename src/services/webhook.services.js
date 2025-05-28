@@ -74,8 +74,8 @@ class WebhookService {
       }
       // Commit all updates
       await batch.commit();
-      await otpClient.sendSuccessSms(userData.phone);
-      await nodemailer.sendPaymentReceipt(userData.email, userData.name,  {
+      otpClient.sendSuccessSms(userData.phone);
+      nodemailer.sendPaymentReceipt(userData.email, userData.name,  {
         ...payment,
         notes: userData.orders.find(order => order.orderId === orderId)?.notes || {}
       });
