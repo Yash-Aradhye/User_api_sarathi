@@ -56,7 +56,7 @@ class UserService {
             userIdList.push(docRef.id);
             await this.metadata.doc('allUserIdLists').update({
               userIdList: userIdList
-            });
+            }); 
           }else{
             await this.metadata.doc('allUserIdLists').set({
               userIdList: [docRef.id]
@@ -80,7 +80,7 @@ class UserService {
 
        await this.collection.doc(doc.id).update({
           currentDeviceId: deviceId,
-          hasLoggedIn: true,
+          
           otp: otp,
           otpExpiry: new Date(Date.now() + 5 * 60 * 1000)
         });
