@@ -343,7 +343,8 @@ class UserService {
 
       return {
         isPremium: true,
-        plan: data.premiumPlan
+        plan: data.premiumPlan,
+        currentDeviceId: data.currentDeviceId
       };
     } catch (error) {
       throw new Error(`Error checking premium status: ${error.message}`);
