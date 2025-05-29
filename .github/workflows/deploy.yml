@@ -156,51 +156,33 @@ jobs:
           echo \"}\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           
-          echo "server {" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    listen 443 ssl;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    server_name \$DOMAIN www.\$DOMAIN;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    # SSL certificate configuration" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_certificate /etc/letsencrypt/live/\$DOMAIN/fullchain.pem;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_certificate_key /etc/letsencrypt/live/\$DOMAIN/privkey.pem;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    # SSL settings optimized for Android 8.1 compatibility" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_protocols TLSv1.2 TLSv1.3;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_prefer_server_ciphers off;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    # Android 8.1 compatible cipher suites" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    # SSL session settings" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_session_timeout 1d;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_session_cache shared:SSL:50m;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_session_tickets off;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    # OCSP stapling" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_stapling on;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    ssl_stapling_verify on;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    # Security headers" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    add_header Strict-Transport-Security \"max-age=63072000\" always;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    add_header X-Frame-Options DENY;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    add_header X-Content-Type-Options nosniff;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    # Pass all requests to your Node.js application" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    location / {" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_pass http://localhost:3006;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_http_version 1.1;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_set_header Upgrade \\\$http_upgrade;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_set_header Connection 'upgrade';" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_set_header Host \\\$host;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_set_header X-Real-IP \\\$remote_addr;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_set_header X-Forwarded-Proto \\\$scheme;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_cache_bypass \\\$http_upgrade;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_connect_timeout 60s;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_send_timeout 60s;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "        proxy_read_timeout 60s;" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "    }" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo "}" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          # HTTPS server block
+          echo \"server {\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    listen 443 ssl;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    server_name \$DOMAIN www.\$DOMAIN;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    # SSL certificate configuration\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_certificate /etc/letsencrypt/live/\$DOMAIN/fullchain.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_certificate_key /etc/letsencrypt/live/\$DOMAIN/privkey.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    # SSL settings\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_protocols TLSv1.2 TLSv1.3;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_prefer_server_ciphers on;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_session_timeout 10m;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_session_cache shared:SSL:10m;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_session_tickets off;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    # Pass all requests to your Node.js application\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    location / {\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_pass http://localhost:3006;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_http_version 1.1;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header Upgrade \\\$http_upgrade;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header Connection 'upgrade';\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header Host \\\$host;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header X-Real-IP \\\$remote_addr;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_set_header X-Forwarded-Proto \\\$scheme;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"        proxy_cache_bypass \\\$http_upgrade;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    }\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"}\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           
           # Test Nginx configuration and restart
           sudo nginx -t && sudo systemctl enable nginx && sudo systemctl restart nginx
