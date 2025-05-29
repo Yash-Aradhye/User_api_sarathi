@@ -33,7 +33,6 @@ class UserService {
           isPremium: false,
           createdAt: new Date(),
           premiumPlan: null,
-          currentDeviceId: deviceId,
           batch:'online',
           firstLogin: true,
         };
