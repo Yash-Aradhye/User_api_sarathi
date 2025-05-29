@@ -166,7 +166,7 @@ jobs:
           echo \"    # SSL settings\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_protocols TLSv1.2 TLSv1.3;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_prefer_server_ciphers off;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo \"    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384; \" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_session_timeout 10m;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_session_cache shared:SSL:10m;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_session_tickets off;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
