@@ -158,7 +158,7 @@ jobs:
           
           # HTTPS server block
           echo \"server {\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo \"    listen 443 ssl;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    listen 443 ssl http2;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    server_name \$DOMAIN www.\$DOMAIN;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    # SSL certificate configuration\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_certificate /etc/letsencrypt/live/\$DOMAIN/fullchain.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
