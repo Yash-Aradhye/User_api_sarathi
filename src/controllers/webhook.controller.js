@@ -29,14 +29,17 @@ class WebhookController {
       switch(event.event) {
         case 'payment.captured':
         case 'payment.authorized':
-          await WebhookService.handlePaymentCaptured(event.event,event.payload.payment.entity);
-          break;
+           console.log(`Processing ${event.event} for order: ${event.payload.payment.entity.order_id}`);
+            await WebhookService.handlePaymentCaptured(event.event, event.payload.payment.entity);
+            console.log(`Successfully processed ${event.event}`);
+            break;
         
           
         case 'payment.failed':
           await WebhookService.handlePaymentFailed(event.event,event.payload.payment.entity);
           break;
         case 'order.paid':
+          console.log(`Processing ${event.event} for order: ${event.payload.order.entity.id}`);
           await WebhookService.handleOrderPaid(event.payload.order.entity);
           break;
           
