@@ -16,7 +16,7 @@ const app = express();
 app.use(json());
 app.use(cors());
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
   next();
 });
 app.use('/api/user', userRouter);
