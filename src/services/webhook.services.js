@@ -214,7 +214,7 @@ class WebhookService {
       throw error;
     }
   }
-  
+
   async handleOrderCreated(order) {
     try {
       // Log order event
@@ -287,23 +287,29 @@ class WebhookService {
   }
   
   async findUserWithOrder(orderId) {
-    // Query to find user with specific order ID
-    // Note: This is a simplistic approach that might need refinement
-    // based on how the orders are stored in user documents
-    //orders is an array of objects in user document
-    // [{ orderId: 'order_id', ...otherFields }]
-    // This query assumes that the orderId is unique across all users
-    // and that the orders field is an array of objects
-    // containing orderId as a field.
-    //make it more efficient by using array-contains
-    // or array-contains-any if orderId is not unique across users
-
-    const query = this.userCollection
-      .where('currentOrderId', '==', orderId)
-    const usersSnapshot = await query.get();
-
-    return usersSnapshot;
-  }
+    try {
+        // Try orderIds first (fastest for users with this field)
+        let usersSnapshot = await this.userCollection
+            .where('orderIds', 'array-contains', orderId)
+            .get()
+            .catch(() => ({ empty: true })); // Handle potential field doesn't exist error
+        
+        if (!usersSnapshot.empty) {
+            return usersSnapshot;
+        }
+        
+        // Fallback to currentOrderId
+        usersSnapshot = await this.userCollection
+            .where('currentOrderId', '==', orderId)
+            .get();
+        
+        return usersSnapshot;
+        
+    } catch (error) {
+        console.error('Find user with order error:', error);
+        throw new Error('Failed to find user with order: ' + error.message);
+    }
+}
 }
 
 export default new WebhookService();
