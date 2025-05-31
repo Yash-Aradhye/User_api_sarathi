@@ -45,6 +45,7 @@ class PaymentService {
       // Update user document with new order
       await this.userCollection.doc(userId).update({
         currentOrderId: order.id,
+        orderIds: FieldValue.arrayUnion(order.id),
         orders: FieldValue.arrayUnion(orderData)
       });
       
