@@ -40,7 +40,11 @@ class WebhookController {
           break;
         case 'order.paid':
           console.log(`Processing ${event.event} for order: ${event.payload.order.entity.id}`);
-          await WebhookService.handleOrderPaid(event.payload.order.entity);
+          await WebhookService.handleOrderPaid("order.paid", event);
+          break;
+        case 'order.created':
+          console.log(`Processing ${event.event} for order: ${event.payload.order.entity.id}`);
+          await WebhookService.handleOrderCreated(event.payload.order.entity);
           break;
           
         case 'refund.created':

@@ -126,10 +126,99 @@ class WebhookService {
     }
   }
   
-  async handleOrderPaid(order) {
+  async handleOrderPaid(event = 'order.paid', webhookData) {
+    try {
+      // Extract payment and order data from the webhook payload
+      const payment = webhookData.payload.payment.entity;
+      const order = webhookData.payload.order.entity;
+      
+      const orderId = order.id;
+      const paymentId = payment.id;
+      
+      console.log('Order paid:', { orderId, paymentId, amount: payment.amount });
+      
+      // Log payment event
+      await this.logPaymentEvent(event, { payment, order });
+      
+      // Find user with this order
+      const usersSnapshot = await this.findUserWithOrder(orderId);
+      
+      if (usersSnapshot.empty) {
+        throw new Error(`No user found with order ${orderId}`);
+      }
+      
+      const userDoc = usersSnapshot.docs[0];
+      const userData = userDoc.data();
+      
+      // Update the specific order in user's array
+      const updatedOrders = userData.orders.map(orderItem => {
+        if (orderItem.orderId === orderId) {
+          return {
+            ...orderItem,
+            paymentStatus: 'completed',
+            paymentId: paymentId,
+            paymentDetails: payment,
+            orderDetails: order,
+            updatedAt: new Date()
+          };
+        }
+        return orderItem;
+      });
+      
+      // Check if this payment is for a premium plan upgrade
+      const isPremiumPayment = userData.orders.some(orderItem => 
+        orderItem.orderId === orderId && orderItem.notes?.planDetails
+      );
+      
+      const batch = db.batch();
+      
+      // Update user's order information
+      batch.update(this.userCollection.doc(userDoc.id), {
+        orders: updatedOrders
+      });
+      
+      // If this is a premium plan payment, update user's premium status
+      if (isPremiumPayment) {
+        const userOrder = userData.orders.find(o => o.orderId === orderId);
+        const planDetails = JSON.parse(userOrder.notes?.planDetails ?? '{}');
+        
+        if (planDetails) {
+          const premiumPlan = {
+            planTitle: planDetails.plan ?? "Saarathi",
+            purchasedDate: new Date(),
+            form: planDetails.form ?? "Sarathi-Online",
+            // Calculate expiry based on plan details (expiry is in days)
+            expiryDate: new Date(Date.now() + (planDetails.expiry || 180) * 24 * 60 * 60 * 1000),
+          };
+          
+          batch.update(this.userCollection.doc(userDoc.id), {
+            isPremium: true,
+            premiumPlan
+          });
+        }
+      }
+      
+      // Commit all updates
+      await batch.commit();
+      
+      // Send success SMS and email
+      await otpClient.sendSuccessSms(userData.phone);
+      await nodemailer.sendPaymentReceipt(userData.email, userData.name, {
+        ...payment,
+        notes: order.notes || {}
+      });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error handling order paid:', error);
+      throw error;
+    }
+  }
+  
+  async handleOrderCreated(order) {
     try {
       // Log order event
-      await this.logPaymentEvent('order.paid', order);
+      await this.logPaymentEvent('order.created', order);
       
       // This is often redundant with payment.captured but can be used as a backup
       return { success: true };
