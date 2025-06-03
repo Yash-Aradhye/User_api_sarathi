@@ -10,13 +10,23 @@ class WebhookController {
       if (!webhookSignature) {
         return res.status(400).json({ error: 'Webhook signature missing' });
       }
-
+      let isValid = false;
       // Verify webhook signature
-      const isValid = this.verifyWebhookSignature(
-        JSON.stringify(req.body),
+      if(Buffer.isBuffer(req.body)) {
+        console.log('Received body is a Buffer, converting to string...');
+        isValid = this.verifyWebhookSignature(
+        req.body.toString('utf8'),
         webhookSignature,
         process.env.RAZ_WEBHOOK_SECRET
       );
+      }else{
+        isValid = this.verifyWebhookSignature(
+        JSON.stringify(req.body),
+        webhookSignature,
+        process.env.RAZ_WEBHOOK_SECRET
+       );
+      }
+      
 
       if (!isValid) {
         return res.status(401).json({ error: 'Invalid webhook signature' });
@@ -70,20 +80,27 @@ class WebhookController {
   }
 
   verifyWebhookSignature(body, signature, secret) {
-    console.log('Verifying webhook signature...');
-    console.log('Body:', body);
-    console.log('Signature:', signature);
-    console.log('Secret:', secret);
-    
-    const expectedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(body)
-      .digest('hex');
-      
-    return crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(signature)
-    );
+    try {
+      console.log('🔐 Verifying webhook signature...');
+      console.log('Body length:', body.length);
+      console.log('Body type:', typeof body);
+      console.log('Signature:', signature);
+      console.log('Secret length:', secret?.length);
+      // Ensure body is a string
+      const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(body, 'utf8') // Explicitly specify UTF-8 encoding
+        .digest('hex');
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(expectedSignature, 'hex'),
+        Buffer.from(signature, 'hex')
+      );
+      console.log('Signature valid:', isValid);
+      return isValid;
+    } catch (error) {
+      console.error('❌ Error in signature verification:', error);
+      return false;
+    }
   }
 }
 
