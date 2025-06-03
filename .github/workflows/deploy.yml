@@ -166,7 +166,7 @@ jobs:
           echo \"    listen 443 ssl http2;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    server_name \$DOMAIN www.\$DOMAIN;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    # SSL certificate configuration\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo \"    ssl_certificate /etc/letsencrypt/live/\$DOMAIN/fullchain.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_certificate /etc/letsencrypt/live/\$DOMAIN/fullchain-with-root.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_certificate_key /etc/letsencrypt/live/\$DOMAIN/privkey.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    # SSL settings\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_protocols TLSv1.2 TLSv1.3;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
