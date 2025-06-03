@@ -7,8 +7,6 @@ import fs from 'fs';
 import http from 'http'
 import path from 'path'
 import dotenv from 'dotenv';
-import rawBodyCatcher from './middleware/rawBodyCatcher.js';
-import { generateSignature } from './services/webhook_test.js';
 
 dotenv.config();
 // Use the PORT from environment (set to 3000 in your GitHub Actions workflow)

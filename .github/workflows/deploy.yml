@@ -190,6 +190,11 @@ jobs:
           # Make sure SELinux allows Nginx to proxy connections (if SELinux is enabled)
           sudo setsebool -P httpd_can_network_connect 1
           
+          # Install cron service (cronie package on Amazon Linux 2023)
+          sudo dnf install -y cronie
+          sudo systemctl enable crond
+          sudo systemctl start crond
+          
           # Restart service using PM2 with ecosystem config
           if [ -f \"ecosystem.config.js\" ]; then
             # Copy ecosystem config if it doesn't exist in the target directory
@@ -208,7 +213,15 @@ jobs:
           fi
           
           # Set up SSL renewal cron job with certificate copy after renewal
-          (crontab -l 2>/dev/null; echo \"0 3 * * * sudo certbot renew --quiet && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem ~/counselling/Backend/User_api/certs/ && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem ~/counselling/Backend/User_api/certs/ && sudo chown ec2-user:ec2-user ~/counselling/Backend/User_api/certs/* && sudo chmod 600 ~/counselling/Backend/User_api/certs/* && sudo systemctl reload nginx && cd ~/counselling/Backend/User_api && pm2 restart user-api\") | sort - | uniq - | crontab -
+          # First, remove any existing similar cron jobs to avoid duplicates
+          (crontab -l 2>/dev/null | grep -v 'certbot renew' || true) | crontab -
+          
+          # Add the new cron job
+          (crontab -l 2>/dev/null; echo \"0 3 * * * sudo certbot renew --quiet && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem ~/counselling/Backend/User_api/certs/ && sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem ~/counselling/Backend/User_api/certs/ && sudo chown ec2-user:ec2-user ~/counselling/Backend/User_api/certs/* && sudo chmod 600 ~/counselling/Backend/User_api/certs/* && sudo systemctl reload nginx && cd ~/counselling/Backend/User_api && pm2 restart user-api\") | crontab -
+          
+          # Verify cron job was added
+          echo \"Current crontab:\"
+          crontab -l
           
           # Remove the tar file after successful deployment
           rm ~/counselling/Backend/deploy.tar.gz
