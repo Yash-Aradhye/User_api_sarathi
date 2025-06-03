@@ -116,8 +116,8 @@ jobs:
           # Copy SSL certificates to app directory with correct permissions
           sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/privkey.pem ~/counselling/Backend/User_api/certs/
           sudo cp /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem ~/counselling/Backend/User_api/certs/
-          sudo cat /etc/letsencrypt/live/${DOMAIN}/cert.pem \
-                   /etc/letsencrypt/live/${DOMAIN}/chain.pem \
+          sudo cat /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/cert.pem \
+                   /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/chain.pem \
                    /etc/ssl/certs/ISRG_Root_X1.pem \
               | sudo tee /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain-with-root.pem > /dev/null
 
