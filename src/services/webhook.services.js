@@ -55,23 +55,16 @@ class WebhookService {
       // If this is a premium plan payment, update user's premium status
       if (isPremiumPayment) {
         const order = userData.orders.find(o => o.orderId === orderId);
-        let planDetails = JSON.parse(order.notes?.planDetails ?? '{}');
+         const planDetails = JSON.parse(order.notes?.planDetails ?? '{}');
         
         if (planDetails) {
-          if(planDetails.plan.includes("PLUS")){
-            planDetails.plan = "Saarthi PLUS ➕";
-          }
-          let premiumPlan = {
-            planTitle: planDetails.plan ?? "Saarthi",
+          const premiumPlan = {
+            planTitle: planDetails.plan ?? "Saarathi",
             purchasedDate: new Date(),
             form: planDetails.form ?? "Sarathi-Online",
             //expiry after 4 months
             expiryDate: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000), // 4 months from now
           };
-
-          if (premiumPlan.planTitle.includes("PLUS")){
-            premiumPlan.planTitle = "Saarthi PLUS ➕"
-          }
           
           batch.update(this.userCollection.doc(userDoc.id), {
             isPremium: true,
