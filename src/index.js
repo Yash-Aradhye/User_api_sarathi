@@ -13,7 +13,13 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 const app = express();
-app.use(json());
+app.use((req, res, next) => {
+  if(req.path === '/webhook' || req.path.includes('webhook') || req.path.includes('test')) {
+    raw({ type: 'application/json' })(req, res, next);
+  }else{
+    json()(req, res, next);
+  }
+});
 app.use(cors());
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
@@ -41,9 +47,13 @@ app.post('/api/print-payload', (req, res) => {
 app.post("/test", express.raw({ type: 'application/json' }), (req, res) => {
   if (Buffer.isBuffer(req.body)) {
        console.log('Raw body:', req.body.toString('utf8'));
-  } else {
+    } else {
       console.log('Received body was already parsed:', req.body);
-  }
+    }
+
+  console.log(generateSignature(req.body.toString('utf8')));
+  
+
   try {
     res.status(200).json({ message: 'Test successful', data: {} });
   } catch (e) {
