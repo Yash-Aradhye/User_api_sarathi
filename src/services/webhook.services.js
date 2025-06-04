@@ -219,7 +219,6 @@ class WebhookService {
     try {
       // Log order event
       await this.logPaymentEvent('order.created', order);
-      
       // This is often redundant with payment.captured but can be used as a backup
       return { success: true };
     } catch (error) {

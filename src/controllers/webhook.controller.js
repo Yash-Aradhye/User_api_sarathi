@@ -33,7 +33,7 @@ class WebhookController {
       }
 
       // Process the webhook event based on its type
-      const event = req.body;
+      const event = JSON.parse(req.body.toString('utf8'));
       
       // Handle different event types
       switch(event.event) {
@@ -84,13 +84,16 @@ class WebhookController {
       console.log('🔐 Verifying webhook signature...');
       console.log('Body length:', body.length);
       console.log('Body type:', typeof body);
-      console.log('Signature:', signature);
+      console.log('Body: ', (JSON.parse(body).event));
+      
       console.log('Secret length:', secret?.length);
       // Ensure body is a string
       const expectedSignature = crypto
         .createHmac('sha256', secret)
         .update(body, 'utf8') // Explicitly specify UTF-8 encoding
         .digest('hex');
+      console.log(`Expected Signature: ${expectedSignature} \nReceived Signature: ${signature}`);
+
       const isValid = crypto.timingSafeEqual(
         Buffer.from(expectedSignature, 'hex'),
         Buffer.from(signature, 'hex')
