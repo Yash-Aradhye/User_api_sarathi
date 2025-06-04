@@ -12,20 +12,11 @@ class WebhookController {
       }
       let isValid = false;
       // Verify webhook signature
-      if(Buffer.isBuffer(req.body)) {
-        console.log('Received body is a Buffer, converting to string...');
-        isValid = this.verifyWebhookSignature(
-        req.body.toString('utf8'),
+      isValid = this.verifyWebhookSignature(
+        JSON.stringify(req.body), // Convert body to string
         webhookSignature,
         process.env.RAZ_WEBHOOK_SECRET
       );
-      }else{
-        isValid = this.verifyWebhookSignature(
-        JSON.stringify(req.body),
-        webhookSignature,
-        process.env.RAZ_WEBHOOK_SECRET
-       );
-      }
       
 
       if (!isValid) {
