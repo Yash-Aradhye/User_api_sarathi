@@ -19,13 +19,19 @@ class PaymentService {
       if (!userDoc.exists) {
         throw new Error('User not found');
       }
-      
+      let normalisedNotes = {
+        ...notes,
+        customerPlan: notes.customerPlan.replace('➕','') || 'free', // Default to 'free' if not provided
+        planDetails: notes.planDetails.replace('➕','') || '{}',
+        planTitle: notes.planTitle ? notes.planTitle.replace('➕','') : 'Free Plan', // Default to 'Free Plan' if not provided
+        userId: userId, // Store user ID in notes for reference
+      }
       // Create order in Razorpay
       const orderOptions = {
         amount: amount * 100, // Amount in paise
         currency,
         receipt,
-        notes,
+        notes: normalisedNotes,
       };
       
       const order = await this.razorpay.orders.create(orderOptions);
