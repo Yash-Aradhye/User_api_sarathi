@@ -42,7 +42,7 @@ class PaymentService {
         paymentStatus: 'pending',
       };
       
-      // Update user document with new order
+      
       await this.userCollection.doc(userId).update({
         currentOrderId: order.id,
         orderIds: FieldValue.arrayUnion(order.id),
@@ -51,6 +51,8 @@ class PaymentService {
       
       return { ...order, key_id: process.env.RAZ_KEY_ID };
     } catch (error) {
+      console.log(`Error creating order: ${error.message}`);
+      
       throw new Error(`Error creating order: ${error.message}`);
     }
   }

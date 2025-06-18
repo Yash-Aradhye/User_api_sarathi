@@ -22,7 +22,7 @@ app.use((req, res, next) => {
 });
 app.use(cors());
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
+  console.log(`${req.method} ${req.url} - ${new Date().toLocaleString()}`);
   next();
 });
 app.use('/api/user', userRouter);

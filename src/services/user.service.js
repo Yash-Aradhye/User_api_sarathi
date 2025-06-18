@@ -110,10 +110,7 @@ class UserService {
           }
         }
       );
-
       console.log(response.data);
-      
-      
       return response.data;
     } catch (error) {
       console.error('Error sending OneSignal notification:', error.response?.data || error.message);
