@@ -170,11 +170,12 @@ jobs:
           echo \"    ssl_certificate_key /etc/letsencrypt/live/\$DOMAIN/privkey.pem;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    # SSL settings\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_protocols TLSv1.2 TLSv1.3;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo \"    ssl_prefer_server_ciphers on;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
-          echo \"    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256; \" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_prefer_server_ciphers off;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    ssl_ciphers 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256'; \" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_session_timeout 10m;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_session_cache shared:SSL:10m;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    ssl_session_tickets off;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
+          echo \"    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    # Pass all requests to your Node.js application\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"    location / {\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
           echo \"        proxy_pass http://localhost:3006;\" | sudo tee -a /etc/nginx/conf.d/user-api.conf > /dev/null
