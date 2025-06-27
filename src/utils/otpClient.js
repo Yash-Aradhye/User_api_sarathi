@@ -102,7 +102,7 @@ class OtpClient {
     const message = `Dear user, your OTP for login to Yash Classes is ${otp}. Please do not share this OTP with anyone. This OTP is valid for 10 minutes. - Yash Classes`;
     
     try {
-      if(phoneNumber == '1231231231' || phoneNumber == '1231231232' || phoneNumber == '7843065180') {
+      if(phoneNumber == '1231231231' || phoneNumber == '1231231232' || phoneNumber == '7843065180' || phoneNumber == '1231231233') {
         console.log(`Test mode: OTP is 123456`);
         return '123456';
       }
