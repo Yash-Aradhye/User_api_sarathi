@@ -463,7 +463,7 @@ class UserService {
 
       // Merge generic form with user data
       const mergedSteps = genericForm.steps.map(genericStep => {
-        const userStep = userData.steps.find(s => s.number === genericStep.number);
+        const userStep = userData.steps.find(s => s.number === genericStep.number && s.title == genericStep.title);
         console.log( {
           ...genericStep,
           data: userStep?.data || null,
@@ -473,7 +473,7 @@ class UserService {
           remark: userStep?.remark || null,
           verdict: userStep?.verdict || ""
         });
-        
+
         
         return {
           ...genericStep,
