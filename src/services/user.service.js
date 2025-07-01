@@ -621,6 +621,11 @@ class UserService {
       await this.collection.doc(doc.id).update({
         name: name,
         email: email,
+        counsellingData:{
+          ...userData.counsellingData,
+          name: name,
+          email: email
+        },
         hasLoggedIn: true,
         firstLogin: false
       });
