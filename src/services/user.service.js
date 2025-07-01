@@ -456,6 +456,8 @@ class UserService {
       const userData = user.stepsData;
 
       if (!userData || userData.id !== formId) {
+        console.log(userData + " " + formId);
+        
         return { id: formId, steps: genericForm.steps };
       }
 
@@ -466,14 +468,22 @@ class UserService {
           ...genericStep,
           data: userStep?.data || null,
           status: userStep?.status || genericStep.status || null,
-          ...userStep
+          collegeName: userStep?.collegeName || "",
+          branchCode: userStep?.branchCode || "",
+          remark: userStep?.remark || null,
+          verdict: userStep?.verdict || ""
         });
+        
         
         return {
           ...genericStep,
           data: userStep?.data || null,
           status: userStep?.status || genericStep.status || null,
-          ...userStep
+          collegeName: userStep?.collegeName || "",
+          branchCode: userStep?.branchCode || "",
+          remark: userStep?.remark || null,
+          verdict: userStep?.verdict || "",
+          accept: userStep?.accept || false
         };
       });
 
