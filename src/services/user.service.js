@@ -78,8 +78,6 @@ class UserService {
       console.log(`SMS to ${phone}: Your verification code is: ${otp}`);
 
        await this.collection.doc(doc.id).update({
-          
-          
           otp: otp,
           otpExpiry: new Date(Date.now() + 5 * 60 * 1000)
         });
@@ -330,11 +328,25 @@ class UserService {
       if (premiumPlans.exists) {
         const plansData = premiumPlans.data();
         if (plansData && plansData.plans) {
-          let currPlan = data.premiumPlan.planTitle == "Saarthi - Office Enrollment" ? plansData.plans.find(plan => plan.title === data.premiumPlan.planTitle): plansData.plans.find(plan => plan.title === "Saarthi+") ;
-          if (currPlan) {
+          let currPlan = data.premiumPlan.planTitle == "Saarthi" ? plansData.plans.find(plan => plan.id === "plan_1"): null;
+          if(data.premiumPlan.id){
+            currPlan = plansData.plans.find(plan => plan.id === data.premiumPlan.id);
+            data.premiumPlan.id = currPlan.id;
             data.premiumPlan.planTitle = currPlan.title;
             data.premiumPlan.form = currPlan.form;
+          }else {
+            if (currPlan) {
+            data.premiumPlan.id = currPlan.id;
+            data.premiumPlan.planTitle = currPlan.title;
+            data.premiumPlan.form = currPlan.form;
+            }
+            if(currPlan && currPlan.id === "plan_2") {
+              data.premiumPlan.id = "plan_2";
+            }
           }
+          await this.collection.doc(data.id).update({
+            premiumPlan: data.premiumPlan
+          });
         }
       }
 
