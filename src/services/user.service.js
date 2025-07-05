@@ -328,13 +328,14 @@ class UserService {
       if (premiumPlans.exists) {
         const plansData = premiumPlans.data();
         if (plansData && plansData.plans) {
-          let currPlan = data.premiumPlan.planTitle == "Saarthi" ? plansData.plans.find(plan => plan.id === "plan_1"): null;
+          let currPlan = null;
           if(data.premiumPlan.id){
             currPlan = plansData.plans.find(plan => plan.id === data.premiumPlan.id);
             data.premiumPlan.id = currPlan.id;
             data.premiumPlan.planTitle = currPlan.title;
             data.premiumPlan.form = currPlan.form;
           }else {
+            currPlan = data.premiumPlan.planTitle == "Saarthi" ? plansData.plans.find(plan => plan.id === "plan_1"):null
             if (currPlan) {
             data.premiumPlan.id = currPlan.id;
             data.premiumPlan.planTitle = currPlan.title;
