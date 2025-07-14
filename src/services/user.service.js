@@ -742,8 +742,12 @@ class UserService {
     try {      
       const formDoc = await this.landingPage.doc('homepage').get();
       const formData = formDoc.data();
+      let data = {
+        ...formData,
+        updates: formData.updates && Array.isArray(formData.updates)? formData.updates.reverse() : []
+      }
       if (!formData) throw new Error('Form not found');
-      return formData?? {}
+      return data?? {}
     } catch (error) {
       throw new Error(`Error getting home page data: ${error.message}`);
     }
